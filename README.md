@@ -1,10 +1,10 @@
 # Negociaae
 Projeto Negociaae
-# Interactive Flow Explorer 🚀
+# Interactive Flow Explorer
 
 Um explorador de fluxogramas interativo e moderno, construído com **React**, **Framer Motion** e **Tailwind CSS**. Este projeto permite navegar por etapas de um processo de forma visual e fluida.
 
-## ✨ Funcionalidades
+## Funcionalidades
 
 - **Navegação Interativa:** Avance e retroceda entre as etapas do fluxo com animações suaves.
 - **Visualização de Conexões:** Linhas dinâmicas que conectam as etapas, proporcionando uma visão clara do progresso.
@@ -12,7 +12,7 @@ Um explorador de fluxogramas interativo e moderno, construído com **React**, **
 - **Zoom e Pan:** Explore fluxos complexos com controles de zoom e movimentação da tela.
 - **Feedback Visual:** Ícones e cores que indicam o status de cada etapa (concluída, ativa ou pendente).
 
-## 🛠️ Tecnologias Utilizadas
+## Tecnologias Utilizadas
 
 - **React 19:** Biblioteca principal para a interface.
 - **TypeScript:** Tipagem estática para maior segurança e produtividade.
@@ -21,7 +21,7 @@ Um explorador de fluxogramas interativo e moderno, construído com **React**, **
 - **Lucide React:** Conjunto de ícones consistentes e leves.
 - **Vite:** Ferramenta de build extremamente rápida.
 
-## 🚀 Como Executar o Projeto
+## Como Executar o Projeto
 
 Siga os passos abaixo para rodar o projeto localmente ou no GitHub Codespaces:
 
@@ -43,14 +43,14 @@ npm run dev
 
 O projeto estará disponível em `http://localhost:3000`.
 
-## 📂 Estrutura do Projeto
+## Estrutura do Projeto
 
 - `src/App.tsx`: Componente principal com a lógica do fluxo e visualização.
 - `src/flowData.ts`: Definição dos dados e etapas do fluxograma.
 - `src/index.css`: Configurações globais de estilo e Tailwind.
 - `vite.config.ts`: Configuração do ambiente de build.
 
-## 📄 Licença
+## Licença
 
 Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
 
