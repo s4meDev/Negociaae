@@ -28,7 +28,7 @@ interface ActiveStep {
 
 export default function App() {
   const [activePath, setActivePath] = useState<ActiveStep[]>([
-    { id: 11, selectedOptionIndices: [], buttonRefs: [] }
+    { id: 10, selectedOptionIndices: [], buttonRefs: [] }
   ]);
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 50, y: 50 });
@@ -181,7 +181,7 @@ export default function App() {
   };
 
   const reset = () => {
-    setActivePath([{ id: 11, selectedOptionIndices: [], buttonRefs: [] }]);
+    setActivePath([{ id: 10, selectedOptionIndices: [], buttonRefs: [] }]);
     setScale(1);
     setPosition({ x: 50, y: 50 });
   };
@@ -189,7 +189,7 @@ export default function App() {
   return (
     <div className="flex flex-col h-screen w-screen bg-slate-50 font-sans select-none">
       {/* Header */}
-      <header className="flex items-center justify-between px-8 py-4 bg-white border-b border-slate-200 z-50 shadow-sm">
+      <header className="flex items-center justify-between px-8 py-4 bg-white border-b border-slate-200 z-50 shadow-sm relative">
         <div className="flex items-center gap-3">
           <img 
             src="/ae-logo.jpeg" 
@@ -198,6 +198,16 @@ export default function App() {
             referrerPolicy="no-referrer"
           />
           <h1 className="text-2xl font-bold tracking-tight text-slate-800">NEGOCIAAE</h1>
+        </div>
+        
+        {/* Banner centralizado */}
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden md:block">
+          <img 
+            src="/ae-banner.jpeg" 
+            alt="AE Banner" 
+            className="h-10 object-contain"
+            referrerPolicy="no-referrer"
+          />
         </div>
         
         <div className="flex items-center gap-4">
@@ -281,6 +291,28 @@ export default function App() {
                         <RotateCcw size={18} />
                         REINICIAR FLUXO
                       </button>
+                    ) : (step.type as string) === 'info' ? (
+                      <div className="flex flex-col gap-2">
+                        <div className="grid grid-cols-1 gap-2">
+                          {step.options?.map((opt, optIdx) => (
+                            <div 
+                              key={optIdx}
+                              className="w-full py-2.5 px-4 bg-slate-50 text-slate-500 border border-slate-100 rounded-lg text-xs font-medium"
+                            >
+                              {opt.txt}
+                            </div>
+                          ))}
+                        </div>
+                        <div className="flex justify-end mt-4">
+                          <button
+                            onClick={() => handleSelect(stepIdx, 0, step.next)}
+                            className="bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-blue-800 transition-all shadow-lg shadow-blue-100"
+                          >
+                            Continuar
+                            <ChevronRight size={18} />
+                          </button>
+                        </div>
+                      </div>
                     ) : step.type === 'text' ? (
                       <button
                         onClick={() => handleSelect(stepIdx, 0, step.next)}

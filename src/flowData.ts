@@ -17,6 +17,24 @@ export interface FlowStep {
 }
 
 export const FLOW_DATA: Record<string | number, FlowStep> = {
+  10: {
+    cat: "INFORMAÇÕES GERAIS",
+    q: "INFORMAÇÕES GERAIS",
+    type: "info" as any,
+    options: [
+      { txt: "1. DATA DO SERVIÇO" },
+      { txt: "2. BLOCO" },
+      { txt: "3. EQUIPE" },
+      { txt: "4. SUPERINTENDÊNCIA" },
+      { txt: "5. PROTOCOLO DE ORIGEM" },
+      { txt: "6. QUAL CÓDIGO/DESCRIÇÃO DE SERVIÇO?" },
+      { txt: "7. MATRÍCULA" },
+      { txt: "8. BAIRRO" },
+      { txt: "9. CIDADE" },
+      { txt: "10. PARECER" }
+    ],
+    next: 11
+  },
   11: {
     cat: "STATUS DO SERVIÇO",
     q: "11. STATUS DA EXECUÇÃO",
