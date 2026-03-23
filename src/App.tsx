@@ -314,17 +314,25 @@ export default function App() {
                         </div>
                       </div>
                     ) : step.type === 'text' ? (
-                      <button
-                        onClick={() => handleSelect(stepIdx, 0, step.next)}
-                        className={`w-full py-3 px-4 rounded-xl font-medium text-left flex items-center justify-between group transition-all ${
-                          activeStep.selectedOptionIndices.includes(0)
-                            ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-200'
-                            : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-100'
-                        }`}
-                      >
-                        <span>Preencher campo</span>
-                        <ChevronRight size={18} className={activeStep.selectedOptionIndices.includes(0) ? 'text-white' : 'text-slate-400'} />
-                      </button>
+                      (() => {
+                        if (!activeStep.buttonRefs[0]) {
+                          activeStep.buttonRefs[0] = React.createRef<HTMLButtonElement | null>();
+                        }
+                        return (
+                          <button
+                            ref={activeStep.buttonRefs[0]}
+                            onClick={() => handleSelect(stepIdx, 0, step.next)}
+                            className={`w-full py-3 px-4 rounded-xl font-medium text-left flex items-center justify-between group transition-all ${
+                              activeStep.selectedOptionIndices.includes(0)
+                                ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-200'
+                                : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-100'
+                            }`}
+                          >
+                            <span>Preencher campo</span>
+                            <ChevronRight size={18} className={activeStep.selectedOptionIndices.includes(0) ? 'text-white' : 'text-slate-400'} />
+                          </button>
+                        );
+                      })()
                     ) : (
                       step.options?.map((opt, optIdx) => {
                         const isSelected = activeStep.selectedOptionIndices.includes(optIdx);

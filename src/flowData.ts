@@ -143,8 +143,8 @@ export const FLOW_DATA: Record<string | number, FlowStep> = {
     type: "single",
     options: [
       { txt: "SIM", next: 20 },
-      { txt: "NÃO", next: 25 },
-      { txt: "EQUIPE NÃO TEVE ACESSO AO HD", next: 28 }
+      { txt: "NÃO", next: 27 },
+      { txt: "EQUIPE NÃO TEVE ACESSO AO HD", next: 27 }
     ]
   },
   20: {
@@ -246,7 +246,7 @@ export const FLOW_DATA: Record<string | number, FlowStep> = {
     type: "single",
     options: [
       { txt: "SIM", next: 30 },
-      { txt: "NÃO", next: 30 }
+      { txt: "NÃO", next: 31 }
     ]
   },
   30: {
@@ -275,7 +275,7 @@ export const FLOW_DATA: Record<string | number, FlowStep> = {
     options: [
       { txt: "SIM", next: 34 },
       { txt: "NÃO", next: 33 },
-      { txt: "ESCAVAÇÃO NÃO NECESSÁRIA", next: 33 }
+      { txt: "ESCAVAÇÃO NÃO NECESSÁRIA", next: 37 }
     ]
   },
   33: {
@@ -283,12 +283,12 @@ export const FLOW_DATA: Record<string | number, FlowStep> = {
     q: "33. MOTIVOS DA NÃO ESCAVAÇÃO",
     type: "single",
     options: [
-      { txt: "IMPEDIMENTO DO MORADOR", next: 36 },
-      { txt: "GRANDE CIRCULAÇÃO", next: 36 },
-      { txt: "PAVIMENTOS ESPECIAIS", next: 36 },
-      { txt: "OBJETO IMPEDINDO", next: 36 },
-      { txt: "NENHUMA ESCAVAÇÃO", next: 36 },
-      { txt: "DESVIO TÉCNICO", next: 36 }
+      { txt: "IMPEDIMENTO DO MORADOR", next: 37 },
+      { txt: "GRANDE CIRCULAÇÃO", next: 37 },
+      { txt: "PAVIMENTOS ESPECIAIS", next: 34 },
+      { txt: "OBJETO IMPEDINDO", next: 37 },
+      { txt: "NENHUMA ESCAVAÇÃO", next: 37 },
+      { txt: "DESVIO TÉCNICO", next: 34 }
     ]
   },
   34: {
@@ -304,84 +304,84 @@ export const FLOW_DATA: Record<string | number, FlowStep> = {
   },
   35: {
     cat: "ESCAVAÇÃO",
-    q: "35. PROFUNDIDADE FOI SUFICIENTE?",
+    q: "35. FORMATO DA ESCAVAÇÃO REALIZADA?",
     type: "single",
     options: [
-      { txt: "SIM", next: 36 },
-      { txt: "NÃO", next: 36 }
+      { txt: "HORIZONTAL - AO LONGO DA FACHADA DO CLIENTE", next: 36 },
+      { txt: "VERTICAL - DA FACHADA EM DIREÇÃO À RUA", next: 36 }
     ]
   },
   36: {
-    cat: "IRREGULARIDADE",
-    q: "36. IRREGULARIDADE IDENTIFICADA?",
+    cat: "ESCAVAÇÃO",
+    q: "36. PROFUNDIDADE FOI SUFICIENTE?",
     type: "single",
     options: [
       { txt: "SIM", next: 37 },
-      { txt: "NÃO", next: 41 }
+      { txt: "NÃO", next: 37 }
     ]
   },
   37: {
     cat: "IRREGULARIDADE",
-    q: "37. TIPO DE IRREGULARIDADE",
+    q: "37. IRREGULARIDADE IDENTIFICADA?",
     type: "single",
     options: [
-      { txt: "BY-PASS", next: 38 },
-      { txt: "CAMINHÃO PIPA", next: 38 },
-      { txt: "TERCEIROS", next: 38 },
-      { txt: "HIDRÔMETRO", next: 38 },
-      { txt: "LIGAÇÃO CLANDESTINA", next: 38 },
-      { txt: "CORTE VIOLADO", next: 38 }
+      { txt: "SIM", next: 38 },
+      { txt: "NÃO", next: 42 }
     ]
   },
   38: {
     cat: "IRREGULARIDADE",
-    q: "38. FOI APLICADO TERMO?",
+    q: "38. TIPO DE IRREGULARIDADE",
     type: "single",
     options: [
-      { txt: "SIM", next: 39 },
-      { txt: "NÃO", next: 41 }
+      { txt: "BY-PASS", next: 39 },
+      { txt: "CAMINHÃO PIPA", next: 39 },
+      { txt: "TERCEIROS", next: 39 },
+      { txt: "HIDRÔMETRO", next: 39 },
+      { txt: "LIGAÇÃO CLANDESTINA", next: 39 },
+      { txt: "CORTE VIOLADO", next: 39 }
     ]
   },
   39: {
     cat: "IRREGULARIDADE",
-    q: "39. TERMO PREENCHIDO CORRETAMENTE?",
+    q: "39. FOI APLICADO TERMO?",
     type: "single",
     options: [
-      { txt: "SIM", next: 41 },
-      { txt: "NÃO", next: 40 }
+      { txt: "SIM", next: 40 },
+      { txt: "NÃO", next: 42 }
     ]
   },
   40: {
     cat: "IRREGULARIDADE",
-    q: "40. INCONFORMIDADES",
+    q: "40. TERMO PREENCHIDO CORRETAMENTE?",
+    type: "single",
+    options: [
+      { txt: "SIM", next: 42 },
+      { txt: "NÃO", next: 41 }
+    ]
+  },
+  41: {
+    cat: "IRREGULARIDADE",
+    q: "41. INCONFORMIDADES",
     type: "multi",
     options: [
       { txt: "DOCUMENTO RASURADO" },
       { txt: "MOTIVO INCORRETO" }
     ],
-    next: 41
-  },
-  41: {
-    cat: "NEGOCIAÇÃO",
-    q: "41. HOUVE NEGOCIAÇÃO?",
-    type: "single",
-    options: [
-      { txt: "SIM", next: 42 },
-      { txt: "NÃO", next: 45 }
-    ]
+    next: 42
   },
   42: {
     cat: "NEGOCIAÇÃO",
-    q: "42. COMUNICADO FOI DEIXADO?",
+    q: "42. HOUVE NEGOCIAÇÃO?",
     type: "single",
     options: [
       { txt: "SIM", next: 43 },
-      { txt: "NÃO", next: 43 }
+      { txt: "NÃO", next: 46 }
     ]
   },
   43: {
     cat: "NEGOCIAÇÃO",
-    q: "43. ORDEM DE RELIGAÇÃO GERADA?",
+    q: "43. COMUNICADO FOI DEIXADO?",
     type: "single",
     options: [
       { txt: "SIM", next: 44 },
@@ -390,7 +390,7 @@ export const FLOW_DATA: Record<string | number, FlowStep> = {
   },
   44: {
     cat: "NEGOCIAÇÃO",
-    q: "44. COMPROVANTE ANEXADO?",
+    q: "44. ORDEM DE RELIGAÇÃO GERADA?",
     type: "single",
     options: [
       { txt: "SIM", next: 45 },
@@ -398,67 +398,76 @@ export const FLOW_DATA: Record<string | number, FlowStep> = {
     ]
   },
   45: {
-    cat: "DESDOBROS",
-    q: "45. DESDOBROS CORRETOS?",
+    cat: "NEGOCIAÇÃO",
+    q: "45. COMPROVANTE ANEXADO?",
     type: "single",
     options: [
-      { txt: "SIM", next: 47 },
+      { txt: "SIM", next: 46 },
       { txt: "NÃO", next: 46 }
     ]
   },
   46: {
     cat: "DESDOBROS",
-    q: "46. ERROS DE DESDOBRO",
+    q: "46. DESDOBROS CORRETOS?",
+    type: "single",
+    options: [
+      { txt: "SIM", next: 48 },
+      { txt: "NÃO", next: 47 }
+    ]
+  },
+  47: {
+    cat: "DESDOBROS",
+    q: "47. ERROS DE DESDOBRO",
     type: "multi",
     options: [
       { txt: "EXCESSO" },
       { txt: "FALTA" },
       { txt: "INCORRETO" }
     ],
-    next: 47
-  },
-  47: {
-    cat: "DESDOBROS",
-    q: "47. NECESSÁRIO RECOMPOSIÇÃO?",
-    type: "single",
-    options: [
-      { txt: "SIM", next: 48 },
-      { txt: "NÃO", next: 49 }
-    ]
+    next: 48
   },
   48: {
     cat: "DESDOBROS",
-    q: "48. TIPO DE PAVIMENTAÇÃO",
+    q: "48. NECESSÁRIO RECOMPOSIÇÃO?",
     type: "single",
     options: [
-      { txt: "CALÇADA FISCALIZAÇÃO", next: 49 },
-      { txt: "CALÇADA CORTE", next: 49 },
-      { txt: "ASFALTO", next: 49 },
-      { txt: "BLOCO/PARALELO", next: 49 },
-      { txt: "CERÂMICA", next: 49 }
+      { txt: "SIM", next: 49 },
+      { txt: "NÃO", next: 50 }
     ]
   },
   49: {
     cat: "DESDOBROS",
-    q: "49. ALTERAÇÃO CADASTRAL?",
+    q: "49. TIPO DE PAVIMENTAÇÃO",
     type: "single",
     options: [
-      { txt: "SIM", next: 50 },
-      { txt: "NÃO", next: 50 }
+      { txt: "CALÇADA FISCALIZAÇÃO", next: 50 },
+      { txt: "CALÇADA CORTE", next: 50 },
+      { txt: "ASFALTO", next: 50 },
+      { txt: "BLOCO/PARALELO", next: 50 },
+      { txt: "CERÂMICA", next: 50 }
     ]
   },
   50: {
-    cat: "ANÁLISE",
-    q: "50. EXECUÇÃO DO SERVIÇO",
+    cat: "DESDOBROS",
+    q: "50. ALTERAÇÃO CADASTRAL?",
     type: "single",
     options: [
-      { txt: "CORRETA", next: 52 },
-      { txt: "INCORRETA", next: 51 }
+      { txt: "SIM", next: 51 },
+      { txt: "NÃO", next: 51 }
     ]
   },
   51: {
     cat: "ANÁLISE",
-    q: "51. INCONFORMIDADES",
+    q: "51. EXECUÇÃO DO SERVIÇO",
+    type: "single",
+    options: [
+      { txt: "CORRETA", next: 52 },
+      { txt: "INCORRETA", next: 52 }
+    ]
+  },
+  52: {
+    cat: "ANÁLISE",
+    q: "52. INCONFORMIDADES",
     type: "multi",
     options: [
       { txt: "ERRO NO PADRÃO DE FOTOS" },
@@ -466,37 +475,38 @@ export const FLOW_DATA: Record<string | number, FlowStep> = {
       { txt: "NÃO FEZ TESTE DPD" },
       { txt: "SERVIÇO ERRADO" }
     ],
-    next: 52
-  },
-  52: {
-    cat: "ANÁLISE",
-    q: "52. PARECER TÉCNICO",
-    type: "text",
     next: 53
   },
   53: {
-    cat: "CONCLUSÃO",
-    q: "53. SITUAÇÃO FINAL",
-    type: "single",
-    options: [
-      { txt: "ATIVO", next: 54 },
-      { txt: "NEGOCIADO", next: 54 },
-      { txt: "CORTADO", next: 54 },
-      { txt: "INCONCLUSIVO", next: 54 }
-    ]
+    cat: "ANÁLISE",
+    q: "53. PARECER TÉCNICO",
+    type: "text",
+    next: 54
   },
   54: {
     cat: "CONCLUSÃO",
-    q: "54. SEGUNDA VISITA?",
+    q: "54. Na finalização do serviço o cliente está:",
     type: "single",
     options: [
-      { txt: "SIM", next: 55 },
-      { txt: "NÃO", next: "final" }
+      { txt: "ATIVO", next: 55 },
+      { txt: "INCONCLUSIVO", next: 55 },
+      { txt: "IMÓVEL EM ESTADO DE ABANDONO", next: 55 },
+      { txt: "NEGOCIADO", next: 55 },
+      { txt: "PERMANECEU CORTADO", next: 55 }
     ]
   },
   55: {
     cat: "CONCLUSÃO",
-    q: "55. INSTRUÇÕES SEGUNDA VISITA",
+    q: "55. SEGUNDA VISITA?",
+    type: "single",
+    options: [
+      { txt: "SIM", next: 56 },
+      { txt: "NÃO", next: "final" }
+    ]
+  },
+  56: {
+    cat: "CONCLUSÃO",
+    q: "56. INSTRUÇÕES SEGUNDA VISITA",
     type: "text",
     next: "final"
   },
