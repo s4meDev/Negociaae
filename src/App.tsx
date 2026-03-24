@@ -71,11 +71,11 @@ export default function App() {
       
       // If we are on a mobile-sized screen or in mobile mode, apply adaptive zoom
       if (viewMode === 'mobile' || screenWidth < 1024) {
-        // We target a specific visual width (820px) that represents the 
+        // We target a specific visual width (850px) that represents the 
         // "perfect fit" identified by the user on the Redmi Note 13.
         // This ensures the card looks exactly the same size relative to the 
         // user's eyes on any device.
-        const targetVisualWidth = 820; 
+        const targetVisualWidth = 850; 
         
         // Calculate the scale needed based on the actual screen width
         const adaptiveScale = targetVisualWidth / screenWidth;
