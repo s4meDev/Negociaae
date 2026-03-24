@@ -42,6 +42,8 @@ export default function App() {
   const [lines, setLines] = useState<{ d: string; id: string; x1: number; y1: number; x2: number; y2: number }[]>([]);
   const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('desktop');
   
+  const [baseMobileScale, setBaseMobileScale] = useState(2);
+  
   const viewportRef = useRef<HTMLDivElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -62,6 +64,44 @@ export default function App() {
     }
   }, [activePath.length, viewMode]);
 
+  // Adaptable mobile zoom calculation
+  useEffect(() => {
+    const updateMobileScale = () => {
+      if (viewMode === 'mobile') {
+        const screenWidth = window.innerWidth;
+        const refCardWidth = 420;
+        
+        // If screen is large (desktop preview), we use 1.0 (half of previous ~2.0)
+        // If screen is small (mobile), we use the "zoom" factor relative to the card width
+        let targetScale;
+        if (screenWidth >= 1024) {
+          targetScale = 1.0;
+        } else if (screenWidth <= 480) {
+          // On mobile, we want the card to be ~1.9x the screen width
+          targetScale = (screenWidth * 1.9) / refCardWidth;
+        } else {
+          // Smooth transition between mobile zoom and desktop 1:1
+          const mobileTarget = (480 * 1.9) / refCardWidth; // ~2.17
+          const desktopTarget = 1.0;
+          const t = (screenWidth - 480) / (1024 - 480);
+          targetScale = mobileTarget + t * (desktopTarget - mobileTarget);
+        }
+        
+        const finalScale = Math.max(0.6, Math.min(4, targetScale));
+        setBaseMobileScale(finalScale);
+        setScale(finalScale);
+        setPosition({ x: 0, y: 0 });
+      } else {
+        setScale(1);
+        setPosition({ x: 50, y: 50 });
+      }
+    };
+
+    updateMobileScale();
+    window.addEventListener('resize', updateMobileScale);
+    return () => window.removeEventListener('resize', updateMobileScale);
+  }, [viewMode]);
+
   // Device detection
   useEffect(() => {
     const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -74,13 +114,7 @@ export default function App() {
 
   // Reset view state when mode changes
   useEffect(() => {
-    if (viewMode === 'mobile') {
-      setPosition({ x: 0, y: 0 });
-      setScale(2);
-    } else {
-      setPosition({ x: 50, y: 50 });
-      setScale(1);
-    }
+    // Logic moved to updateMobileScale useEffect
   }, [viewMode]);
 
   // Handle zooming
@@ -88,7 +122,7 @@ export default function App() {
     if (viewMode === 'mobile') return; // Disable zoom via wheel in mobile scroll mode if preferred, or keep it
     e.preventDefault();
     const delta = e.deltaY > 0 ? -0.1 : 0.1;
-    setScale((prev: number) => Math.min(Math.max(prev + delta, 0.4), 2));
+    setScale((prev: number) => Math.min(Math.max(prev + delta, 0.4), 8));
   };
 
   // Handle dragging (Mouse)
@@ -145,7 +179,7 @@ export default function App() {
           e.touches[0].clientY - e.touches[1].clientY
         );
         const delta = (distance - lastTouchDistance.current) * 0.005;
-        setScale((prev: number) => Math.min(Math.max(prev + delta, 0.4), 2));
+        setScale((prev: number) => Math.min(Math.max(prev + delta, 0.4), 8));
         lastTouchDistance.current = distance;
       }
       return;
@@ -162,7 +196,7 @@ export default function App() {
         e.touches[0].clientY - e.touches[1].clientY
       );
       const delta = (distance - lastTouchDistance.current) * 0.005;
-      setScale((prev: number) => Math.min(Math.max(prev + delta, 0.4), 2));
+      setScale((prev: number) => Math.min(Math.max(prev + delta, 0.4), 8));
       lastTouchDistance.current = distance;
     }
   };
@@ -328,8 +362,13 @@ export default function App() {
 
   const reset = () => {
     setActivePath([{ id: 10, selectedOptionIndices: [], buttonRefs: [] }]);
-    setScale(viewMode === 'mobile' ? 2 : 1);
-    setPosition(viewMode === 'mobile' ? { x: 0, y: 0 } : { x: 50, y: 50 });
+    if (viewMode === 'mobile') {
+      setScale(baseMobileScale);
+      setPosition({ x: 0, y: 0 });
+    } else {
+      setScale(1);
+      setPosition({ x: 50, y: 50 });
+    }
   };
 
   return (
@@ -387,10 +426,10 @@ export default function App() {
               {viewMode === 'mobile' ? <Minus size={24} /> : <ZoomOut size={18} />}
             </button>
             <span className="px-2 md:px-3 text-[14px] md:text-xs font-mono font-medium text-slate-500 min-w-12 md:min-w-15 text-center">
-              {viewMode === 'mobile' ? Math.round((scale / 2) * 100) : Math.round(scale * 100)}%
+              {viewMode === 'mobile' ? Math.round((scale / baseMobileScale) * 100) : Math.round(scale * 100)}%
             </span>
             <button 
-              onClick={() => setScale((s: number) => Math.min(s + 0.1, 4))}
+              onClick={() => setScale((s: number) => Math.min(s + 0.1, 8))}
               className="p-2 md:p-1.5 hover:bg-white rounded-md text-slate-600 transition-colors"
             >
               {viewMode === 'mobile' ? <Plus size={24} /> : <ZoomIn size={18} />}
@@ -428,7 +467,7 @@ export default function App() {
           ref={boardRef}
           className={`flex ${
             viewMode === 'mobile' 
-              ? 'relative flex-col gap-12 md:gap-32 px-2 py-6 md:p-8 items-center w-full origin-top' 
+              ? 'relative flex-col gap-12 md:gap-32 px-2 py-6 md:p-8 items-center w-fit mx-auto origin-top' 
               : 'absolute top-0 left-0 flex-row gap-24 p-20 origin-top-left'
           }`}
           style={{ 
