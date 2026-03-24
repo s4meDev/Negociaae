@@ -25,7 +25,7 @@ Um explorador de fluxogramas interativo e moderno, construído com **React**, **
 
 ### Abra o Navegador e Acesse o Site
 
-O projeto estará disponível em `https://negociaae.vercel.app/`
+O projeto estará disponível em `https://negociaae.vercel.app`
 
 ## Como Executar o Projeto Local
 
