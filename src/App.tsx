@@ -60,7 +60,7 @@ export default function App() {
         const steps = boardRef.current?.querySelectorAll('.glass-card');
         if (steps && steps.length > 0) {
           const lastStep = steps[steps.length - 1];
-          lastStep.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          lastStep.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
         }
       }, 100);
       return () => clearTimeout(timer);
@@ -382,15 +382,17 @@ export default function App() {
   return (
     <div className="flex flex-col h-[100dvh] w-screen bg-slate-50 font-sans select-none overflow-hidden">
       {/* Header */}
-      <header className="flex items-center justify-between px-4 md:px-8 py-4 md:py-3 bg-white border-b border-slate-200 z-50 shadow-sm relative min-h-28 md:min-h-16 flex-shrink-0">
-        <div className="flex items-center gap-4 md:gap-3">
+      <header className={`flex items-center justify-between px-4 md:px-8 bg-white border-b border-slate-200 z-50 shadow-sm relative flex-shrink-0 transition-all ${
+        viewMode === 'mobile' ? 'py-2 min-h-16' : 'py-4 md:py-3 min-h-28 md:min-h-16'
+      }`}>
+        <div className={`flex items-center gap-4 md:gap-3 transition-all ${viewMode === 'mobile' ? 'scale-90 origin-left' : ''}`}>
           <img 
             src="/ae-logo.jpeg" 
             alt="NEGOCIAAE Logo" 
-            className="w-12 h-12 md:w-10 md:h-10 rounded-lg md:rounded-xl object-cover shadow-sm"
+            className="w-10 h-10 md:w-10 md:h-10 rounded-lg md:rounded-xl object-cover shadow-sm"
             referrerPolicy="no-referrer"
           />
-          <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-800">NEGOCIAAE</h1>
+          <h1 className="text-lg md:text-2xl font-bold tracking-tight text-slate-800">NEGOCIAAE</h1>
         </div>
         
         {/* Banner centralizado - Visível se houver espaço suficiente */}
@@ -405,7 +407,7 @@ export default function App() {
         
         {/* Banner simplificado para mobile - opcional, mas vamos tentar manter o header limpo */}
         
-        <div className="flex items-center gap-2 md:gap-4">
+        <div className={`flex items-center gap-2 md:gap-4 transition-all ${viewMode === 'mobile' ? 'scale-90 origin-right' : ''}`}>
           {/* View Mode Toggle */}
           <div className="flex items-center bg-slate-100 rounded-lg p-1 md:p-1 border border-slate-200">
             <button 
@@ -501,9 +503,19 @@ export default function App() {
               return (
                 <motion.div
                   key={`${activeStep.id}-${stepIdx}`}
-                  initial={{ opacity: 0, x: 50, scale: 0.95 }}
-                  animate={{ opacity: 1, x: 0, scale: 1 }}
-                  exit={{ opacity: 0, x: -50, scale: 0.95 }}
+                  initial={{ 
+                    opacity: 0, 
+                    x: viewMode === 'mobile' ? 0 : 50, 
+                    y: viewMode === 'mobile' ? 20 : 0,
+                    scale: 0.95 
+                  }}
+                  animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+                  exit={{ 
+                    opacity: 0, 
+                    x: viewMode === 'mobile' ? 0 : -50, 
+                    y: viewMode === 'mobile' ? -20 : 0,
+                    scale: 0.95 
+                  }}
                   transition={{ type: 'spring', damping: 20, stiffness: 100 }}
                   className={`glass-card flex flex-col h-fit transition-all ${
                     viewMode === 'mobile' 
