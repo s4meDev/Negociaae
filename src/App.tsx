@@ -42,7 +42,7 @@ export default function App() {
   const [lines, setLines] = useState<{ d: string; id: string; x1: number; y1: number; x2: number; y2: number }[]>([]);
   const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('desktop');
   
-  const [baseMobileScale, setBaseMobileScale] = useState(3.5);
+  const [baseMobileScale, setBaseMobileScale] = useState(2);
   
   const viewportRef = useRef<HTMLDivElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
@@ -67,22 +67,27 @@ export default function App() {
   // Adaptable mobile zoom calculation
   useEffect(() => {
     const updateMobileScale = () => {
-      const screenWidth = window.innerWidth;
-      
-      // If we are on a mobile-sized screen or in mobile mode, apply adaptive zoom
-      if (viewMode === 'mobile' || screenWidth < 1024) {
-        // We target a specific visual width (850px) that represents the 
-        // "perfect fit" identified by the user on the Redmi Note 13.
-        // This ensures the card looks exactly the same size relative to the 
-        // user's eyes on any device.
-        const targetVisualWidth = 850; 
+      if (viewMode === 'mobile') {
+        const screenWidth = window.innerWidth;
+        const refCardWidth = 420;
         
-        // Calculate the scale needed based on the actual screen width
-        const adaptiveScale = targetVisualWidth / screenWidth;
+        // If screen is large (desktop preview), we use 1.0 (half of previous ~2.0)
+        // If screen is small (mobile), we use the "zoom" factor relative to the card width
+        let targetScale;
+        if (screenWidth >= 1024) {
+          targetScale = 1.0;
+        } else if (screenWidth <= 480) {
+          // On mobile, we want the card to be ~1.9x the screen width
+          targetScale = (screenWidth * 1.9) / refCardWidth;
+        } else {
+          // Smooth transition between mobile zoom and desktop 1:1
+          const mobileTarget = (480 * 1.9) / refCardWidth; // ~2.17
+          const desktopTarget = 1.0;
+          const t = (screenWidth - 480) / (1024 - 480);
+          targetScale = mobileTarget + t * (desktopTarget - mobileTarget);
+        }
         
-        // Cap the scale to sensible limits
-        const finalScale = Math.max(1.5, Math.min(4, adaptiveScale));
-        
+        const finalScale = Math.max(0.6, Math.min(4, targetScale));
         setBaseMobileScale(finalScale);
         setScale(finalScale);
         setPosition({ x: 0, y: 0 });
@@ -99,23 +104,12 @@ export default function App() {
 
   // Device detection
   useEffect(() => {
-    const checkMode = () => {
-      const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-      const isSmallScreen = window.innerWidth < 1024;
-      const isMobile = isMobileUA || (isTouch && isSmallScreen);
-      
-      setViewMode(prev => {
-        if (prev !== (isMobile ? 'mobile' : 'desktop')) {
-          return isMobile ? 'mobile' : 'desktop';
-        }
-        return prev;
-      });
-    };
+    const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    const isSmallScreen = window.innerWidth < 1024;
+    const isMobile = isMobileUA || (isTouch && isSmallScreen);
     
-    checkMode();
-    window.addEventListener('resize', checkMode);
-    return () => window.removeEventListener('resize', checkMode);
+    setViewMode(isMobile ? 'mobile' : 'desktop');
   }, []);
 
   // Reset view state when mode changes
@@ -471,7 +465,6 @@ export default function App() {
       >
         <div 
           ref={boardRef}
-          key={`board-${viewMode}`}
           className={`flex ${
             viewMode === 'mobile' 
               ? 'relative flex-col gap-12 md:gap-32 px-2 py-6 md:p-8 items-center w-fit mx-auto origin-top' 
@@ -506,7 +499,7 @@ export default function App() {
                   transition={{ type: 'spring', damping: 20, stiffness: 100 }}
                   className={`glass-card flex flex-col h-fit transition-all ${
                     viewMode === 'mobile' 
-                      ? 'p-4 w-[92vw] max-w-[380px] gap-3 shadow-2xl' 
+                      ? 'p-4 w-[96vw] max-w-[420px] gap-3' 
                       : 'p-6 min-w-70 gap-4'
                   }`}
                 >
