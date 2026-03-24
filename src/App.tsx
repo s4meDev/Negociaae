@@ -203,9 +203,9 @@ export default function App() {
         {/* Banner centralizado */}
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden md:block">
           <img 
-            src="/ae-banner.jpeg" 
+            src="/ae-banner.png" 
             alt="AE Banner" 
-            className="h-10 object-contain"
+            className="h-12 object-contain"
             referrerPolicy="no-referrer"
           />
         </div>
