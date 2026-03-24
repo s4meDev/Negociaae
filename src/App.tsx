@@ -79,11 +79,11 @@ export default function App() {
         if (screenWidth >= 1024) {
           targetScale = 1.0;
         } else {
-          // Use the original formula adjusted to 72.5% as requested by the user
+          // Use the original formula adjusted to 60% as requested by the user
           // (screenWidth * 1.9) / 420 is the old "100%"
-          // We apply 0.725 to reach the "perfect" proportion shown in the reference image
+          // We apply 0.6 to reach the "perfect" proportion shown in the reference image
           const baseScale = (screenWidth * 1.9) / 420;
-          const adjustedScale = baseScale * 0.725;
+          const adjustedScale = baseScale * 0.6;
           
           // Adjust for aspect ratio: 
           // If the device is wider/shorter than the Redmi (REF_RATIO = 0.45),
