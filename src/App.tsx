@@ -24,6 +24,7 @@ interface ActiveStep {
   id: string | number;
   selectedOptionIndices: number[];
   buttonRefs: React.RefObject<HTMLButtonElement | null>[];
+  lastClickedContinue?: 'top' | 'bottom' | null;
 }
 
 export default function App() {
@@ -80,8 +81,15 @@ export default function App() {
       const nextStep = activePath[i + 1];
       
       // Find which button was clicked in current step to lead to next step
-      const currentIdx = currentStep.selectedOptionIndices[currentStep.selectedOptionIndices.length - 1];
-      const startBtn = currentStep.buttonRefs[currentIdx]?.current;
+      let startBtn;
+      if (currentStep.selectedOptionIndices.length > 0) {
+        const currentIdx = currentStep.selectedOptionIndices[currentStep.selectedOptionIndices.length - 1];
+        startBtn = currentStep.buttonRefs[currentIdx]?.current;
+      } else if (currentStep.lastClickedContinue === 'top') {
+        startBtn = currentStep.buttonRefs[998]?.current;
+      } else {
+        startBtn = currentStep.buttonRefs[999]?.current;
+      }
       
       // Find the selected button in the next step to connect to
       // If no option is selected yet in the next step, connect to the card header area
@@ -166,6 +174,8 @@ export default function App() {
       // For multi, we only proceed if there's a next step defined and at least one selected
       if (currentActive.selectedOptionIndices.length > 0 && step.next) {
         newPath.push({ id: step.next, selectedOptionIndices: [], buttonRefs: [] });
+      } else if (currentActive.lastClickedContinue && step.next) {
+        newPath.push({ id: step.next, selectedOptionIndices: [], buttonRefs: [] });
       }
     } else {
       currentActive.selectedOptionIndices = [optionIdx];
@@ -176,8 +186,21 @@ export default function App() {
         newPath.push({ id: 'final', selectedOptionIndices: [], buttonRefs: [] });
       }
     }
-
     setActivePath(newPath);
+  };
+
+  const handleContinue = (stepIdx: number, position: 'top' | 'bottom') => {
+    const step = FLOW_DATA[activePath[stepIdx].id];
+    let newPath = [...activePath].slice(0, stepIdx + 1);
+    const currentActive = { ...newPath[stepIdx] };
+    
+    currentActive.lastClickedContinue = position;
+    newPath[stepIdx] = currentActive;
+    
+    if (step.next) {
+      newPath.push({ id: step.next, selectedOptionIndices: [], buttonRefs: [] });
+      setActivePath(newPath);
+    }
   };
 
   const reset = () => {
@@ -334,40 +357,84 @@ export default function App() {
                         );
                       })()
                     ) : (
-                      step.options?.map((opt, optIdx) => {
-                        const isSelected = activeStep.selectedOptionIndices.includes(optIdx);
-                        
-                        // Initialize ref if not exists
-                        if (!activeStep.buttonRefs[optIdx]) {
-                          activeStep.buttonRefs[optIdx] = React.createRef<HTMLButtonElement | null>();
-                        }
+                      <div className="flex flex-col gap-2">
+                        {/* Top Continue Button for step 52 */}
+                        {activeStep.id === 52 && (
+                          <div className="flex justify-end mb-1">
+                            {(() => {
+                              if (!activeStep.buttonRefs[998]) {
+                                activeStep.buttonRefs[998] = React.createRef<HTMLButtonElement | null>();
+                              }
+                              return (
+                                <button
+                                  ref={activeStep.buttonRefs[998]}
+                                  onClick={() => handleContinue(stepIdx, 'top')}
+                                  className="bg-blue-700 text-white px-4 py-1.5 rounded-xl font-bold flex items-center gap-2 hover:bg-blue-800 transition-all shadow-lg shadow-blue-100 text-sm"
+                                >
+                                  Continuar
+                                  <ChevronRight size={16} />
+                                </button>
+                              );
+                            })()}
+                          </div>
+                        )}
 
-                        return (
-                          <button
-                            key={optIdx}
-                            ref={activeStep.buttonRefs[optIdx]}
-                            onClick={() => handleSelect(stepIdx, optIdx, opt.next)}
-                            className={`w-full py-3 px-4 rounded-xl font-medium text-left flex items-center justify-between group transition-all ${
-                              isSelected
-                                ? 'bg-blue-700 text-white shadow-md'
-                                : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-100'
-                            }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              {step.type === 'multi' ? (
-                                isSelected ? <CheckCircle2 size={18} /> : <Circle size={18} className="text-slate-300" />
-                              ) : null}
-                              <span>{opt.txt}</span>
-                            </div>
-                            <ChevronRight 
-                              size={18} 
-                              className={`transition-transform duration-300 ${
-                                isSelected ? 'translate-x-1 text-white' : 'text-slate-300 group-hover:text-slate-400'
-                              }`} 
-                            />
-                          </button>
-                        );
-                      })
+                        {step.options?.map((opt, optIdx) => {
+                          const isSelected = activeStep.selectedOptionIndices.includes(optIdx);
+                          
+                          // Initialize ref if not exists
+                          if (!activeStep.buttonRefs[optIdx]) {
+                            activeStep.buttonRefs[optIdx] = React.createRef<HTMLButtonElement | null>();
+                          }
+
+                          return (
+                            <button
+                              key={optIdx}
+                              ref={activeStep.buttonRefs[optIdx]}
+                              onClick={() => handleSelect(stepIdx, optIdx, opt.next)}
+                              className={`w-full py-3 px-4 rounded-xl font-medium text-left flex items-center justify-between group transition-all ${
+                                isSelected
+                                  ? 'bg-blue-700 text-white shadow-md'
+                                  : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-100'
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                {step.type === 'multi' ? (
+                                  isSelected ? <CheckCircle2 size={18} /> : <Circle size={18} className="text-slate-300" />
+                                ) : null}
+                                <span>{opt.txt}</span>
+                              </div>
+                              <ChevronRight 
+                                size={18} 
+                                className={`transition-transform duration-300 ${
+                                  isSelected ? 'translate-x-1 text-white' : 'text-slate-300 group-hover:text-slate-400'
+                                }`} 
+                              />
+                            </button>
+                          );
+                        })}
+
+                        {/* Bottom Continue Button for step 52 */}
+                        {activeStep.id === 52 && (
+                          <div className="flex justify-end mt-4">
+                            {(() => {
+                              if (!activeStep.buttonRefs[999]) {
+                                activeStep.buttonRefs[999] = React.createRef<HTMLButtonElement | null>();
+                              }
+                              return (
+                                <button
+                                  ref={activeStep.buttonRefs[999]}
+                                  onClick={() => handleContinue(stepIdx, 'bottom')}
+                                  className="bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-blue-800 transition-all shadow-lg shadow-blue-100"
+                                >
+                                  Continuar
+                                  <ChevronRight size={18} />
+                                </button>
+                              );
+                            })()}
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                 </motion.div>
