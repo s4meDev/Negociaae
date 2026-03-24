@@ -50,10 +50,15 @@ export default function App() {
   // Auto-scroll to new steps in mobile mode
   useEffect(() => {
     if (viewMode === 'mobile' && boardRef.current && activePath.length > 1) {
-      const lastChild = boardRef.current.lastElementChild;
-      if (lastChild) {
-        lastChild.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
+      // Use a small timeout to allow the new step to be rendered
+      const timer = setTimeout(() => {
+        const steps = boardRef.current?.querySelectorAll('.glass-card');
+        if (steps && steps.length > 0) {
+          const lastStep = steps[steps.length - 1];
+          lastStep.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, [activePath.length, viewMode]);
 
