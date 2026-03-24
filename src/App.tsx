@@ -71,15 +71,15 @@ export default function App() {
         const screenWidth = window.innerWidth;
         
         // The "perfect" scale factor identified by the user for Redmi Note 13
-        // A scale of 2.15 makes the 96vw card exactly ~2.06x the viewport width
-        const idealMobileScale = 2.15; 
+        // A scale of 2.8 makes the 96vw card exactly ~2.68x the viewport width
+        const idealMobileScale = 2.8; 
         
         let targetScale;
         if (screenWidth >= 1024) {
           // On desktop preview, we use 1.0 to avoid the "blown out" look
           targetScale = 1.0;
         } else if (screenWidth <= 480) {
-          // On all mobile devices, use the constant 2.15 scale to maintain the "perfect" proportion
+          // On all mobile devices, use the constant 2.8 scale to maintain the "perfect" proportion
           targetScale = idealMobileScale;
         } else {
           // Smooth transition for intermediate tablet sizes
@@ -104,12 +104,23 @@ export default function App() {
 
   // Device detection
   useEffect(() => {
-    const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-    const isSmallScreen = window.innerWidth < 1024;
-    const isMobile = isMobileUA || (isTouch && isSmallScreen);
+    const checkMode = () => {
+      const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+      const isSmallScreen = window.innerWidth < 1024;
+      const isMobile = isMobileUA || (isTouch && isSmallScreen);
+      
+      setViewMode(prev => {
+        if (prev !== (isMobile ? 'mobile' : 'desktop')) {
+          return isMobile ? 'mobile' : 'desktop';
+        }
+        return prev;
+      });
+    };
     
-    setViewMode(isMobile ? 'mobile' : 'desktop');
+    checkMode();
+    window.addEventListener('resize', checkMode);
+    return () => window.removeEventListener('resize', checkMode);
   }, []);
 
   // Reset view state when mode changes
@@ -465,6 +476,7 @@ export default function App() {
       >
         <div 
           ref={boardRef}
+          key={`board-${viewMode}`}
           className={`flex ${
             viewMode === 'mobile' 
               ? 'relative flex-col gap-12 md:gap-32 px-2 py-6 md:p-8 items-center w-fit mx-auto origin-top' 
