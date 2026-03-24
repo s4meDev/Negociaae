@@ -493,7 +493,7 @@ export const FLOW_DATA: Record<string | number, FlowStep> = {
   },
   53: {
     cat: "ANÁLISE",
-    q: "53. PARECER TÉCNICO",
+    q: "53. PARECER TÉCNICO DA ANÁLISE:",
     type: "text",
     next: 54
   },
@@ -511,7 +511,7 @@ export const FLOW_DATA: Record<string | number, FlowStep> = {
   },
   55: {
     cat: "CONCLUSÃO",
-    q: "55. SEGUNDA VISITA?",
+    q: "55. NECESSÁRIO SEGUNDA VISITA?",
     type: "single",
     options: [
       { txt: "SIM", next: 56 },
@@ -520,7 +520,7 @@ export const FLOW_DATA: Record<string | number, FlowStep> = {
   },
   56: {
     cat: "CONCLUSÃO",
-    q: "56. INSTRUÇÕES SEGUNDA VISITA",
+    q: "56. INSTRUÇÕES PARA SEGUNDA VISITA:",
     type: "text",
     next: "final"
   },
