@@ -69,25 +69,25 @@ export default function App() {
     const updateMobileScale = () => {
       if (viewMode === 'mobile') {
         const screenWidth = window.innerWidth;
-        const refCardWidth = 420;
         
-        // If screen is large (desktop preview), we use 1.0 (half of previous ~2.0)
-        // If screen is small (mobile), we use the "zoom" factor relative to the card width
+        // Calibrated scale that matches the "perfect" look on Redmi Note 13
+        // This ensures the card maintains the exact same proportion relative to the screen on any device
+        const idealMobileScale = 1.85; 
+        
         let targetScale;
         if (screenWidth >= 1024) {
+          // On desktop preview, we use 1.0 (half of mobile zoom) as requested
           targetScale = 1.0;
         } else if (screenWidth <= 480) {
-          // On mobile, we want the card to be ~1.9x the screen width
-          targetScale = (screenWidth * 1.9) / refCardWidth;
+          // On all mobile devices, use the constant ideal scale to maintain proportion
+          targetScale = idealMobileScale;
         } else {
-          // Smooth transition between mobile zoom and desktop 1:1
-          const mobileTarget = (480 * 1.9) / refCardWidth; // ~2.17
-          const desktopTarget = 1.0;
+          // Smooth transition for intermediate tablet sizes
           const t = (screenWidth - 480) / (1024 - 480);
-          targetScale = mobileTarget + t * (desktopTarget - mobileTarget);
+          targetScale = idealMobileScale + t * (1.0 - idealMobileScale);
         }
         
-        const finalScale = Math.max(0.6, Math.min(4, targetScale));
+        const finalScale = Math.max(0.5, Math.min(4, targetScale));
         setBaseMobileScale(finalScale);
         setScale(finalScale);
         setPosition({ x: 0, y: 0 });
