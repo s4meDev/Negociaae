@@ -318,21 +318,21 @@ export default function App() {
   };
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-slate-50 font-sans select-none">
+    <div className="flex flex-col h-[100dvh] w-screen bg-slate-50 font-sans select-none overflow-hidden">
       {/* Header */}
-      <header className="flex items-center justify-between px-4 md:px-8 py-3 bg-white border-b border-slate-200 z-50 shadow-sm relative min-h-16">
+      <header className="flex items-center justify-between px-3 md:px-8 py-2 md:py-3 bg-white border-b border-slate-200 z-50 shadow-sm relative min-h-14 md:min-h-16 flex-shrink-0">
         <div className="flex items-center gap-2 md:gap-3">
           <img 
             src="/ae-logo.jpeg" 
             alt="NEGOCIAAE Logo" 
-            className="w-8 h-8 md:w-10 md:h-10 rounded-xl object-cover shadow-sm"
+            className="w-7 h-7 md:w-10 md:h-10 rounded-lg md:rounded-xl object-cover shadow-sm"
             referrerPolicy="no-referrer"
           />
-          <h1 className="text-lg md:text-2xl font-bold tracking-tight text-slate-800">NEGOCIAAE</h1>
+          <h1 className="text-base md:text-2xl font-bold tracking-tight text-slate-800">NEGOCIAAE</h1>
         </div>
         
-        {/* Banner centralizado - Oculto em telas pequenas para evitar sobreposição */}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden xl:block">
+        {/* Banner centralizado - Visível se houver espaço suficiente */}
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden lg:block">
           <img 
             src="/ae-banner.png" 
             alt="AE Banner" 
@@ -340,6 +340,8 @@ export default function App() {
             referrerPolicy="no-referrer"
           />
         </div>
+        
+        {/* Banner simplificado para mobile - opcional, mas vamos tentar manter o header limpo */}
         
         <div className="flex items-center gap-2 md:gap-4">
           {/* View Mode Toggle */}
@@ -393,7 +395,7 @@ export default function App() {
       {/* Main Viewport */}
       <div 
         ref={viewportRef}
-        className={`flex-1 relative flow-bg ${
+        className={`flex-1 relative flow-bg w-full max-w-full ${
           viewMode === 'mobile' 
             ? 'overflow-y-auto overflow-x-hidden' 
             : 'overflow-hidden cursor-grab active:cursor-grabbing touch-none'
@@ -411,7 +413,7 @@ export default function App() {
           ref={boardRef}
           className={`flex ${
             viewMode === 'mobile' 
-              ? 'relative flex-col gap-32 p-8 items-center w-full origin-top' 
+              ? 'relative flex-col gap-12 md:gap-32 px-2 py-6 md:p-8 items-center w-full origin-top' 
               : 'absolute top-0 left-0 flex-row gap-24 p-20 origin-top-left'
           }`}
           style={{ 
@@ -419,6 +421,16 @@ export default function App() {
             transition: isDragging ? 'none' : 'transform 0.1s ease-out'
           }}
         >
+          {viewMode === 'mobile' && (
+            <div className="w-full flex justify-center mb-4">
+              <img 
+                src="/ae-banner.png" 
+                alt="AE Banner" 
+                className="w-[80vw] max-w-[300px] object-contain"
+                referrerPolicy="no-referrer"
+              />
+            </div>
+          )}
           <AnimatePresence mode="popLayout">
             {activePath.map((activeStep, stepIdx) => {
               const step = FLOW_DATA[activeStep.id];
@@ -433,7 +445,7 @@ export default function App() {
                   transition={{ type: 'spring', damping: 20, stiffness: 100 }}
                   className={`glass-card flex flex-col h-fit transition-all ${
                     viewMode === 'mobile' 
-                      ? 'p-4 w-[90vw] max-w-[340px] gap-3' 
+                      ? 'p-4 w-[96vw] max-w-[420px] gap-3' 
                       : 'p-6 min-w-70 gap-4'
                   }`}
                 >
