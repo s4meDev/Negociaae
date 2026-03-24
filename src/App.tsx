@@ -16,7 +16,11 @@ import {
   Circle, 
   MousePointer2, 
   ZoomIn, 
-  ZoomOut
+  ZoomOut,
+  Monitor,
+  Smartphone,
+  Plus,
+  Minus
 } from 'lucide-react';
 import { FLOW_DATA } from './flowData';
 
@@ -36,27 +40,42 @@ export default function App() {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [lines, setLines] = useState<{ d: string; id: string; x1: number; y1: number; x2: number; y2: number }[]>([]);
+  const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('desktop');
   
   const viewportRef = useRef<HTMLDivElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+  const lastTouchDistance = useRef<number | null>(null);
+
+  // Device detection
+  useEffect(() => {
+    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    setViewMode(isMobileDevice ? 'mobile' : 'desktop');
+    
+    if (isMobileDevice) {
+      // Reset position for mobile to use native scroll
+      setPosition({ x: 0, y: 0 });
+    }
+  }, []);
 
   // Handle zooming
   const handleWheel = (e: React.WheelEvent) => {
+    if (viewMode === 'mobile') return; // Disable zoom via wheel in mobile scroll mode if preferred, or keep it
     e.preventDefault();
     const delta = e.deltaY > 0 ? -0.1 : 0.1;
     setScale((prev: number) => Math.min(Math.max(prev + delta, 0.4), 2));
   };
 
-  // Handle dragging
+  // Handle dragging (Mouse)
   const handleMouseDown = (e: React.MouseEvent) => {
+    if (viewMode === 'mobile') return;
     if (e.button !== 0) return; // Only left click
     setIsDragging(true);
     setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return;
+    if (viewMode === 'mobile' || !isDragging) return;
     setPosition({
       x: e.clientX - dragStart.x,
       y: e.clientY - dragStart.y
@@ -64,6 +83,69 @@ export default function App() {
   };
 
   const handleMouseUp = () => setIsDragging(false);
+
+  // Handle dragging (Touch)
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (viewMode === 'mobile') {
+      if (e.touches.length === 2) {
+        const distance = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        lastTouchDistance.current = distance;
+      }
+      return;
+    }
+
+    if (e.touches.length === 1) {
+      setIsDragging(true);
+      setDragStart({ 
+        x: e.touches[0].clientX - position.x, 
+        y: e.touches[0].clientY - position.y 
+      });
+    } else if (e.touches.length === 2) {
+      const distance = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      lastTouchDistance.current = distance;
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (viewMode === 'mobile') {
+      if (e.touches.length === 2 && lastTouchDistance.current !== null) {
+        const distance = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        const delta = (distance - lastTouchDistance.current) * 0.005;
+        setScale((prev: number) => Math.min(Math.max(prev + delta, 0.4), 2));
+        lastTouchDistance.current = distance;
+      }
+      return;
+    }
+
+    if (e.touches.length === 1 && isDragging) {
+      setPosition({
+        x: e.touches[0].clientX - dragStart.x,
+        y: e.touches[0].clientY - dragStart.y
+      });
+    } else if (e.touches.length === 2 && lastTouchDistance.current !== null) {
+      const distance = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const delta = (distance - lastTouchDistance.current) * 0.005;
+      setScale((prev: number) => Math.min(Math.max(prev + delta, 0.4), 2));
+      lastTouchDistance.current = distance;
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+    lastTouchDistance.current = null;
+  };
 
   // Calculate curved lines
   const updateLines = useCallback(() => {
@@ -73,53 +155,69 @@ export default function App() {
     }
 
     const newLines: { d: string; id: string; x1: number; y1: number; x2: number; y2: number }[] = [];
-    const svgRect = svgRef.current.getBoundingClientRect();
+    const boardRect = boardRef.current.getBoundingClientRect();
 
     // Iterate through steps to connect them
     for (let i = 0; i < activePath.length - 1; i++) {
       const currentStep = activePath[i];
       const nextStep = activePath[i + 1];
       
-      // Find which button was clicked in current step to lead to next step
-      let startBtn;
-      if (currentStep.selectedOptionIndices.length > 0) {
-        const currentIdx = currentStep.selectedOptionIndices[currentStep.selectedOptionIndices.length - 1];
-        startBtn = currentStep.buttonRefs[currentIdx]?.current;
-      } else if (currentStep.lastClickedContinue === 'top') {
-        startBtn = currentStep.buttonRefs[998]?.current;
-      } else {
-        startBtn = currentStep.buttonRefs[999]?.current;
-      }
-      
-      // Find the selected button in the next step to connect to
-      // If no option is selected yet in the next step, connect to the card header area
-      const nextIdx = nextStep.selectedOptionIndices[0];
-      const endBtn = nextStep.buttonRefs[nextIdx]?.current;
-      
-      // The next column container (fallback if no button is selected)
+      const currentCol = boardRef.current.children[i] as HTMLElement;
       const nextCol = boardRef.current.children[i + 1] as HTMLElement;
 
-      if (startBtn && nextCol) {
-        const r1 = startBtn.getBoundingClientRect();
-        const r2 = endBtn ? endBtn.getBoundingClientRect() : nextCol.getBoundingClientRect();
+      if (currentCol && nextCol) {
+        const r1_card = currentCol.getBoundingClientRect();
+        const r2_card = nextCol.getBoundingClientRect();
 
-        // Start point: right center of the selected button in current card
-        const x1 = (r1.right - svgRect.left) / scale;
-        const y1 = (r1.top + r1.height / 2 - svgRect.top) / scale;
+        let x1, y1, x2, y2, d;
 
-        // End point: left center of the selected button in next card (or header area)
-        const x2 = (r2.left - svgRect.left) / scale;
-        const y2 = endBtn 
-          ? (r2.top + r2.height / 2 - svgRect.top) / scale 
-          : (r2.top + 40 - svgRect.top) / scale;
+        if (viewMode === 'mobile') {
+          // Mobile: Bottom of current card to top of next card
+          // Coordinates are relative to the SVG which is now inside boardRef
+          x1 = (r1_card.left + r1_card.width / 2 - boardRect.left) / scale;
+          y1 = (r1_card.bottom - boardRect.top) / scale;
+          
+          x2 = (r2_card.left + r2_card.width / 2 - boardRect.left) / scale;
+          y2 = (r2_card.top - boardRect.top) / scale;
 
-        // Bezier curve points: horizontal out, then vertical adjustment, then horizontal in
-        const cp1x = x1 + (x2 - x1) * 0.4;
-        const cp1y = y1;
-        const cp2x = x1 + (x2 - x1) * 0.6;
-        const cp2y = y2;
+          const cp1y = y1 + (y2 - y1) * 0.5;
+          const cp2y = y1 + (y2 - y1) * 0.5;
+          d = `M ${x1} ${y1} C ${x1} ${cp1y}, ${x2} ${cp2y}, ${x2} ${y2}`;
+        } else {
+          // Desktop: Right side of option to left side of next card
+          let startBtn;
+          if (currentStep.selectedOptionIndices.length > 0) {
+            const currentIdx = currentStep.selectedOptionIndices[currentStep.selectedOptionIndices.length - 1];
+            startBtn = currentStep.buttonRefs[currentIdx]?.current;
+          } else if (currentStep.lastClickedContinue === 'top') {
+            startBtn = currentStep.buttonRefs[998]?.current;
+          } else {
+            startBtn = currentStep.buttonRefs[999]?.current;
+          }
+          
+          const nextIdx = nextStep.selectedOptionIndices[0];
+          const endBtn = nextStep.buttonRefs[nextIdx]?.current;
 
-        const d = `M ${x1} ${y1} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${x2} ${y2}`;
+          if (startBtn) {
+            const r1 = startBtn.getBoundingClientRect();
+            const r2 = endBtn ? endBtn.getBoundingClientRect() : nextCol.getBoundingClientRect();
+
+            x1 = (r1.right - boardRect.left) / scale;
+            y1 = (r1.top + r1.height / 2 - boardRect.top) / scale;
+
+            x2 = (r2.left - boardRect.left) / scale;
+            y2 = endBtn 
+              ? (r2.top + r2.height / 2 - boardRect.top) / scale 
+              : (r2.top + 40 - boardRect.top) / scale;
+
+            const cp1x = x1 + (x2 - x1) * 0.4;
+            const cp2x = x1 + (x2 - x1) * 0.6;
+            d = `M ${x1} ${y1} C ${cp1x} ${y1}, ${cp2x} ${y2}, ${x2} ${y2}`;
+          } else {
+            continue;
+          }
+        }
+
         newLines.push({ 
           d, 
           id: `line-${i}-${currentStep.id}-${nextStep.id}`,
@@ -128,7 +226,7 @@ export default function App() {
       }
     }
     setLines(newLines);
-  }, [activePath, scale]);
+  }, [activePath, scale, viewMode]);
 
   useEffect(() => {
     const observer = new ResizeObserver(() => {
@@ -212,52 +310,72 @@ export default function App() {
   return (
     <div className="flex flex-col h-screen w-screen bg-slate-50 font-sans select-none">
       {/* Header */}
-      <header className="flex items-center justify-between px-8 py-4 bg-white border-b border-slate-200 z-50 shadow-sm relative">
-        <div className="flex items-center gap-3">
+      <header className="flex items-center justify-between px-4 md:px-8 py-3 bg-white border-b border-slate-200 z-50 shadow-sm relative min-h-16">
+        <div className="flex items-center gap-2 md:gap-3">
           <img 
             src="/ae-logo.jpeg" 
             alt="NEGOCIAAE Logo" 
-            className="w-10 h-10 rounded-xl object-cover shadow-sm"
+            className="w-8 h-8 md:w-10 md:h-10 rounded-xl object-cover shadow-sm"
             referrerPolicy="no-referrer"
           />
-          <h1 className="text-2xl font-bold tracking-tight text-slate-800">NEGOCIAAE</h1>
+          <h1 className="text-lg md:text-2xl font-bold tracking-tight text-slate-800">NEGOCIAAE</h1>
         </div>
         
-        {/* Banner centralizado */}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden md:block">
+        {/* Banner centralizado - Oculto em telas pequenas para evitar sobreposição */}
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden xl:block">
           <img 
             src="/ae-banner.png" 
             alt="AE Banner" 
-            className="h-12 object-contain"
+            className="h-10 object-contain"
             referrerPolicy="no-referrer"
           />
         </div>
         
-        <div className="flex items-center gap-4">
-          <div className="flex items-center bg-slate-100 rounded-lg p-1 border border-slate-200">
+        <div className="flex items-center gap-2 md:gap-4">
+          {/* View Mode Toggle */}
+          <div className="flex items-center bg-slate-100 rounded-lg p-0.5 md:p-1 border border-slate-200">
+            <button 
+              onClick={() => setViewMode('desktop')}
+              className={`p-1 md:p-1.5 rounded-md transition-all flex items-center gap-1.5 px-1.5 md:px-2 ${viewMode === 'desktop' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              title="Versão Desktop"
+            >
+              <Monitor size={14} className="md:w-4 md:h-4" />
+              <span className="text-[9px] md:text-[10px] font-bold uppercase hidden md:inline">Desktop</span>
+            </button>
+            <button 
+              onClick={() => setViewMode('mobile')}
+              className={`p-1 md:p-1.5 rounded-md transition-all flex items-center gap-1.5 px-1.5 md:px-2 ${viewMode === 'mobile' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              title="Versão Mobile"
+            >
+              <Smartphone size={14} className="md:w-4 md:h-4" />
+              <span className="text-[9px] md:text-[10px] font-bold uppercase hidden md:inline">Mobile</span>
+            </button>
+          </div>
+
+          <div className="flex items-center bg-slate-100 rounded-lg p-0.5 md:p-1 border border-slate-200">
             <button 
               onClick={() => setScale((s: number) => Math.max(s - 0.1, 0.4))}
-              className="p-1.5 hover:bg-white rounded-md text-slate-600 transition-colors"
+              className="p-1 md:p-1.5 hover:bg-white rounded-md text-slate-600 transition-colors"
             >
-              <ZoomOut size={18} />
+              {viewMode === 'mobile' ? <Minus size={16} /> : <ZoomOut size={18} />}
             </button>
-            <span className="px-3 text-xs font-mono font-medium text-slate-500 min-w-15 text-center">
+            <span className="px-1 md:px-3 text-[10px] md:text-xs font-mono font-medium text-slate-500 min-w-8 md:min-w-15 text-center">
               {Math.round(scale * 100)}%
             </span>
             <button 
               onClick={() => setScale((s: number) => Math.min(s + 0.1, 2))}
-              className="p-1.5 hover:bg-white rounded-md text-slate-600 transition-colors"
+              className="p-1 md:p-1.5 hover:bg-white rounded-md text-slate-600 transition-colors"
             >
-              <ZoomIn size={18} />
+              {viewMode === 'mobile' ? <Plus size={16} /> : <ZoomIn size={18} />}
             </button>
           </div>
           
           <button 
             onClick={reset}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-700 font-medium hover:bg-slate-50 transition-colors shadow-sm"
+            className="flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-white border border-slate-200 rounded-lg text-slate-700 font-medium hover:bg-slate-50 transition-colors shadow-sm"
           >
-            <RotateCcw size={18} />
-            Reiniciar
+            <RotateCcw size={16} className="md:w-4 md:h-4" />
+            {viewMode === 'mobile' ? null : <span className="hidden sm:inline">Reiniciar</span>}
           </button>
         </div>
       </header>
@@ -265,18 +383,29 @@ export default function App() {
       {/* Main Viewport */}
       <div 
         ref={viewportRef}
-        className="flex-1 relative overflow-hidden flow-bg cursor-grab active:cursor-grabbing"
+        className={`flex-1 relative flow-bg ${
+          viewMode === 'mobile' 
+            ? 'overflow-y-auto overflow-x-hidden' 
+            : 'overflow-hidden cursor-grab active:cursor-grabbing touch-none'
+        }`}
         onWheel={handleWheel}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         <div 
           ref={boardRef}
-          className="absolute top-0 left-0 flex gap-24 p-20 origin-top-left"
+          className={`flex origin-top-left ${
+            viewMode === 'mobile' 
+              ? 'relative flex-col gap-32 p-8 items-center w-full' 
+              : 'absolute top-0 left-0 flex-row gap-24 p-20'
+          }`}
           style={{ 
-            transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
+            transform: viewMode === 'mobile' ? `scale(${scale})` : `translate(${position.x}px, ${position.y}px) scale(${scale})`,
             transition: isDragging ? 'none' : 'transform 0.1s ease-out'
           }}
         >
@@ -292,16 +421,24 @@ export default function App() {
                   animate={{ opacity: 1, x: 0, scale: 1 }}
                   exit={{ opacity: 0, x: -50, scale: 0.95 }}
                   transition={{ type: 'spring', damping: 20, stiffness: 100 }}
-                  className="glass-card p-6 min-w-70 flex flex-col gap-4 h-fit"
+                  className={`glass-card flex flex-col h-fit transition-all ${
+                    viewMode === 'mobile' 
+                      ? 'p-4 w-[90vw] max-w-85 gap-3' 
+                      : 'p-6 min-w-70 gap-4'
+                  }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold tracking-widest text-blue-700 uppercase bg-blue-50 px-2 py-1 rounded">
+                    <span className={`font-bold tracking-widest text-blue-700 uppercase bg-blue-50 px-2 py-1 rounded ${
+                      viewMode === 'mobile' ? 'text-[8px]' : 'text-[10px]'
+                    }`}>
                       {step.cat}
                     </span>
                     <div className="w-2 h-2 rounded-full bg-slate-200" />
                   </div>
                   
-                  <h3 className="text-slate-800 font-semibold leading-tight text-lg">
+                  <h3 className={`text-slate-800 font-semibold leading-tight ${
+                    viewMode === 'mobile' ? 'text-base' : 'text-lg'
+                  }`}>
                     {step.q}
                   </h3>
 
@@ -309,18 +446,26 @@ export default function App() {
                     {step.type === 'final' ? (
                       <button
                         onClick={reset}
-                        className="w-full py-3 px-4 bg-emerald-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-emerald-200 hover:bg-emerald-600"
+                        className={`w-full py-3 px-4 bg-emerald-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-emerald-200 hover:bg-emerald-600 ${
+                          viewMode === 'mobile' ? 'text-sm' : ''
+                        }`}
                       >
-                        <RotateCcw size={18} />
+                        <RotateCcw size={viewMode === 'mobile' ? 16 : 18} />
                         REINICIAR FLUXO
                       </button>
                     ) : (step.type as string) === 'info' ? (
                       <div className="flex flex-col gap-2">
-                        <div className="grid grid-cols-1 gap-2">
+                        <div className={`grid gap-2 ${
+                          viewMode === 'mobile' && step.options && step.options.length > 4
+                            ? 'grid-cols-2' 
+                            : 'grid-cols-1'
+                        }`}>
                           {step.options?.map((opt, optIdx) => (
                             <div 
                               key={optIdx}
-                              className="w-full py-2.5 px-4 bg-slate-50 text-slate-500 border border-slate-100 rounded-lg text-xs font-medium"
+                              className={`w-full bg-slate-50 text-slate-500 border border-slate-100 rounded-lg font-medium flex items-center ${
+                                viewMode === 'mobile' ? 'py-2 px-3 text-[10px]' : 'py-2.5 px-4 text-xs'
+                              }`}
                             >
                               {opt.txt}
                             </div>
@@ -329,10 +474,12 @@ export default function App() {
                         <div className="flex justify-end mt-4">
                           <button
                             onClick={() => handleSelect(stepIdx, 0, step.next)}
-                            className="bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-blue-800 transition-all shadow-lg shadow-blue-100"
+                            className={`bg-blue-700 text-white rounded-xl font-bold flex items-center gap-2 hover:bg-blue-800 transition-all shadow-lg shadow-blue-100 ${
+                              viewMode === 'mobile' ? 'px-4 py-2 text-sm' : 'px-6 py-2.5'
+                            }`}
                           >
                             Continuar
-                            <ChevronRight size={18} />
+                            <ChevronRight size={viewMode === 'mobile' ? 16 : 18} />
                           </button>
                         </div>
                       </div>
@@ -345,14 +492,16 @@ export default function App() {
                           <button
                             ref={activeStep.buttonRefs[0]}
                             onClick={() => handleSelect(stepIdx, 0, step.next)}
-                            className={`w-full py-3 px-4 rounded-xl font-medium text-left flex items-center justify-between group transition-all ${
+                            className={`w-full rounded-xl font-medium text-left flex items-center justify-between group transition-all ${
+                              viewMode === 'mobile' ? 'py-2.5 px-3.5 text-sm' : 'py-3 px-4'
+                            } ${
                               activeStep.selectedOptionIndices.includes(0)
                                 ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-200'
                                 : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-100'
                             }`}
                           >
                             <span>Preencher campo</span>
-                            <ChevronRight size={18} className={activeStep.selectedOptionIndices.includes(0) ? 'text-white' : 'text-slate-400'} />
+                            <ChevronRight size={viewMode === 'mobile' ? 16 : 18} className={activeStep.selectedOptionIndices.includes(0) ? 'text-white' : 'text-slate-400'} />
                           </button>
                         );
                       })()
@@ -369,50 +518,62 @@ export default function App() {
                                 <button
                                   ref={activeStep.buttonRefs[998]}
                                   onClick={() => handleContinue(stepIdx, 'top')}
-                                  className="bg-blue-700 text-white px-4 py-1.5 rounded-xl font-bold flex items-center gap-2 hover:bg-blue-800 transition-all shadow-lg shadow-blue-100 text-sm"
+                                  className={`bg-blue-700 text-white rounded-xl font-bold flex items-center gap-2 hover:bg-blue-800 transition-all shadow-lg shadow-blue-100 ${
+                                    viewMode === 'mobile' ? 'px-3 py-1 text-xs' : 'px-4 py-1.5 text-sm'
+                                  }`}
                                 >
                                   Continuar
-                                  <ChevronRight size={16} />
+                                  <ChevronRight size={viewMode === 'mobile' ? 14 : 16} />
                                 </button>
                               );
                             })()}
                           </div>
                         )}
 
-                        {step.options?.map((opt, optIdx) => {
-                          const isSelected = activeStep.selectedOptionIndices.includes(optIdx);
-                          
-                          // Initialize ref if not exists
-                          if (!activeStep.buttonRefs[optIdx]) {
-                            activeStep.buttonRefs[optIdx] = React.createRef<HTMLButtonElement | null>();
-                          }
+                        <div className={`grid gap-2 ${
+                          viewMode === 'mobile' && step.options && step.options.length > 4
+                            ? 'grid-cols-2' 
+                            : 'grid-cols-1'
+                        }`}>
+                          {step.options?.map((opt, optIdx) => {
+                            const isSelected = activeStep.selectedOptionIndices.includes(optIdx);
+                            
+                            // Initialize ref if not exists
+                            if (!activeStep.buttonRefs[optIdx]) {
+                              activeStep.buttonRefs[optIdx] = React.createRef<HTMLButtonElement | null>();
+                            }
 
-                          return (
-                            <button
-                              key={optIdx}
-                              ref={activeStep.buttonRefs[optIdx]}
-                              onClick={() => handleSelect(stepIdx, optIdx, opt.next)}
-                              className={`w-full py-3 px-4 rounded-xl font-medium text-left flex items-center justify-between group transition-all ${
-                                isSelected
-                                  ? 'bg-blue-700 text-white shadow-md'
-                                  : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-100'
-                              }`}
-                            >
-                              <div className="flex items-center gap-3">
-                                {step.type === 'multi' ? (
-                                  isSelected ? <CheckCircle2 size={18} /> : <Circle size={18} className="text-slate-300" />
-                                ) : null}
-                                <span>{opt.txt}</span>
-                              </div>
-                              <ChevronRight 
-                                size={18} 
-                                className={`transition-transform duration-300 ${
-                                  isSelected ? 'translate-x-1 text-white' : 'text-slate-300 group-hover:text-slate-400'
-                                }`} 
-                              />
-                            </button>
-                          );
-                        })}
+                            return (
+                              <button
+                                key={optIdx}
+                                ref={activeStep.buttonRefs[optIdx]}
+                                onClick={() => handleSelect(stepIdx, optIdx, opt.next)}
+                                className={`w-full rounded-xl font-medium text-left flex items-center justify-between group transition-all ${
+                                  viewMode === 'mobile' ? 'py-2 px-3 text-[11px]' : 'py-3 px-4'
+                                } ${
+                                  isSelected
+                                    ? 'bg-blue-700 text-white shadow-md'
+                                    : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-100'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2">
+                                  {step.type === 'multi' ? (
+                                    isSelected ? <CheckCircle2 size={viewMode === 'mobile' ? 14 : 18} /> : <Circle size={viewMode === 'mobile' ? 14 : 18} className="text-slate-300" />
+                                  ) : null}
+                                  <span className="line-clamp-2">{opt.txt}</span>
+                                </div>
+                                {viewMode !== 'mobile' && (
+                                  <ChevronRight 
+                                    size={18} 
+                                    className={`transition-transform duration-300 ${
+                                      isSelected ? 'translate-x-1 text-white' : 'text-slate-300 group-hover:text-slate-400'
+                                    }`} 
+                                  />
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
 
                         {/* Bottom Continue Button for step 52 */}
                         {activeStep.id === 52 && (
@@ -425,10 +586,12 @@ export default function App() {
                                 <button
                                   ref={activeStep.buttonRefs[999]}
                                   onClick={() => handleContinue(stepIdx, 'bottom')}
-                                  className="bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-blue-800 transition-all shadow-lg shadow-blue-100"
+                                  className={`bg-blue-700 text-white rounded-xl font-bold flex items-center gap-2 hover:bg-blue-800 transition-all shadow-lg shadow-blue-100 ${
+                                    viewMode === 'mobile' ? 'px-4 py-2 text-sm' : 'px-6 py-2.5'
+                                  }`}
                                 >
                                   Continuar
-                                  <ChevronRight size={18} />
+                                  <ChevronRight size={viewMode === 'mobile' ? 16 : 18} />
                                 </button>
                               );
                             })()}
@@ -441,96 +604,91 @@ export default function App() {
               );
             })}
           </AnimatePresence>
+
+          {/* SVG Layer for lines - Moved inside boardRef for correct scrolling */}
+          <svg 
+            ref={svgRef}
+            className="absolute inset-0 pointer-events-none z-0 overflow-visible"
+          >
+            <defs>
+              <marker
+                id="dot"
+                viewBox="0 0 10 10"
+                refX="5"
+                refY="5"
+                markerWidth="4"
+                markerHeight="4"
+              >
+                <circle cx="5" cy="5" r="4" fill="#1d4ed8" />
+              </marker>
+            </defs>
+            
+            <AnimatePresence>
+              {lines.map((line: { id: string; d: string; x1: number; y1: number; x2: number; y2: number }, i: number) => {
+                return (
+                  <React.Fragment key={`line-group-${i}`}>
+                    {/* Main animated line */}
+                    <motion.path
+                      initial={{ pathLength: 0, opacity: 0 }}
+                      animate={{ 
+                        pathLength: 1, 
+                        opacity: 1,
+                        strokeDashoffset: [0, -40],
+                        d: line.d
+                      }}
+                      exit={{ opacity: 0 }}
+                      d={line.d}
+                      fill="none"
+                      stroke="#1d4ed8"
+                      strokeOpacity="0.6"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeDasharray="10 6"
+                      transition={{ 
+                        pathLength: { duration: 0.8, ease: "easeOut" },
+                        opacity: { duration: 0.4 },
+                        d: { duration: 0.4, ease: "easeInOut" },
+                        strokeDashoffset: { 
+                          repeat: Infinity, 
+                          duration: 3, 
+                          ease: "linear" 
+                        }
+                      }}
+                    />
+
+                    {/* Start Point Dot */}
+                    <motion.g
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                    >
+                      <motion.circle
+                        animate={{ cx: line.x1, cy: line.y1 }}
+                        r="4"
+                        fill="#1d4ed8"
+                        transition={{ duration: 0.4, ease: "easeInOut" }}
+                      />
+                    </motion.g>
+
+                    {/* End Point Dot */}
+                    <motion.g
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                    >
+                      <motion.circle
+                        animate={{ cx: line.x2, cy: line.y2 }}
+                        r="4"
+                        fill="#1d4ed8"
+                        transition={{ duration: 0.4, ease: "easeInOut" }}
+                      />
+                    </motion.g>
+                  </React.Fragment>
+                );
+              })}
+            </AnimatePresence>
+          </svg>
         </div>
-
-        {/* SVG Layer for lines */}
-        <svg 
-          ref={svgRef}
-          className="absolute inset-0 pointer-events-none z-0 overflow-visible"
-          style={{ 
-            transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
-            transformOrigin: '0 0',
-            transition: isDragging ? 'none' : 'transform 0.1s ease-out'
-          }}
-        >
-          <defs>
-            <marker
-              id="dot"
-              viewBox="0 0 10 10"
-              refX="5"
-              refY="5"
-              markerWidth="4"
-              markerHeight="4"
-            >
-              <circle cx="5" cy="5" r="4" fill="#1d4ed8" />
-            </marker>
-          </defs>
-          
-          <AnimatePresence>
-            {lines.map((line: { id: string; d: string; x1: number; y1: number; x2: number; y2: number }, i: number) => {
-              return (
-                <React.Fragment key={`line-group-${i}`}>
-                  {/* Main animated line */}
-                  <motion.path
-                    initial={{ pathLength: 0, opacity: 0 }}
-                    animate={{ 
-                      pathLength: 1, 
-                      opacity: 1,
-                      strokeDashoffset: [0, -40],
-                      d: line.d
-                    }}
-                    exit={{ opacity: 0 }}
-                    d={line.d}
-                    fill="none"
-                    stroke="#1d4ed8"
-                    strokeOpacity="0.6"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeDasharray="10 6"
-                    transition={{ 
-                      pathLength: { duration: 0.8, ease: "easeOut" },
-                      opacity: { duration: 0.4 },
-                      d: { duration: 0.4, ease: "easeInOut" },
-                      strokeDashoffset: { 
-                        repeat: Infinity, 
-                        duration: 3, 
-                        ease: "linear" 
-                      }
-                    }}
-                  />
-
-                  {/* Start Point Dot */}
-                  <motion.g
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0, opacity: 0 }}
-                  >
-                    <motion.circle
-                      animate={{ cx: line.x1, cy: line.y1 }}
-                      r="4"
-                      fill="#1d4ed8"
-                      transition={{ duration: 0.4, ease: "easeInOut" }}
-                    />
-                  </motion.g>
-
-                  {/* End Point Dot */}
-                  <motion.g
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0, opacity: 0 }}
-                  >
-                    <motion.circle
-                      animate={{ cx: line.x2, cy: line.y2 }}
-                      r="4"
-                      fill="#1d4ed8"
-                      transition={{ duration: 0.4, ease: "easeInOut" }}
-                    />
-                  </motion.g>
-                </React.Fragment>
-              );
-            })}
-          </AnimatePresence>
-        </svg>
       </div>
 
       {/* Footer / Status */}
