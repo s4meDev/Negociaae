@@ -47,6 +47,16 @@ export default function App() {
   const svgRef = useRef<SVGSVGElement>(null);
   const lastTouchDistance = useRef<number | null>(null);
 
+  // Auto-scroll to new steps in mobile mode
+  useEffect(() => {
+    if (viewMode === 'mobile' && boardRef.current && activePath.length > 1) {
+      const lastChild = boardRef.current.lastElementChild;
+      if (lastChild) {
+        lastChild.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  }, [activePath.length, viewMode]);
+
   // Device detection
   useEffect(() => {
     const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -372,7 +382,7 @@ export default function App() {
               {viewMode === 'mobile' ? <Minus size={24} /> : <ZoomOut size={18} />}
             </button>
             <span className="px-2 md:px-3 text-[14px] md:text-xs font-mono font-medium text-slate-500 min-w-12 md:min-w-15 text-center">
-              {Math.round(scale * 100)}%
+              {viewMode === 'mobile' ? Math.round((scale / 2) * 100) : Math.round(scale * 100)}%
             </span>
             <button 
               onClick={() => setScale((s: number) => Math.min(s + 0.1, 4))}
