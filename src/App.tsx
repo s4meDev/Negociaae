@@ -49,14 +49,24 @@ export default function App() {
 
   // Device detection
   useEffect(() => {
-    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    setViewMode(isMobileDevice ? 'mobile' : 'desktop');
+    const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    const isSmallScreen = window.innerWidth < 1024;
+    const isMobile = isMobileUA || (isTouch && isSmallScreen);
     
-    if (isMobileDevice) {
-      // Reset position for mobile to use native scroll
-      setPosition({ x: 0, y: 0 });
-    }
+    setViewMode(isMobile ? 'mobile' : 'desktop');
   }, []);
+
+  // Reset view state when mode changes
+  useEffect(() => {
+    if (viewMode === 'mobile') {
+      setPosition({ x: 0, y: 0 });
+      setScale(1);
+    } else {
+      setPosition({ x: 50, y: 50 });
+      setScale(1);
+    }
+  }, [viewMode]);
 
   // Handle zooming
   const handleWheel = (e: React.WheelEvent) => {
@@ -399,10 +409,10 @@ export default function App() {
       >
         <div 
           ref={boardRef}
-          className={`flex origin-top-left ${
+          className={`flex ${
             viewMode === 'mobile' 
-              ? 'relative flex-col gap-32 p-8 items-center w-full' 
-              : 'absolute top-0 left-0 flex-row gap-24 p-20'
+              ? 'relative flex-col gap-32 p-8 items-center w-full origin-top' 
+              : 'absolute top-0 left-0 flex-row gap-24 p-20 origin-top-left'
           }`}
           style={{ 
             transform: viewMode === 'mobile' ? `scale(${scale})` : `translate(${position.x}px, ${position.y}px) scale(${scale})`,
@@ -423,7 +433,7 @@ export default function App() {
                   transition={{ type: 'spring', damping: 20, stiffness: 100 }}
                   className={`glass-card flex flex-col h-fit transition-all ${
                     viewMode === 'mobile' 
-                      ? 'p-4 w-[90vw] max-w-85 gap-3' 
+                      ? 'p-4 w-[90vw] max-w-[340px] gap-3' 
                       : 'p-6 min-w-70 gap-4'
                   }`}
                 >
