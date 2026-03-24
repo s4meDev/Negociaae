@@ -69,15 +69,22 @@ export default function App() {
     const updateMobileScale = () => {
       const screenWidth = window.innerWidth;
       
-      // If we are on a mobile-sized screen or in mobile mode, apply proportional zoom
+      // If we are on a mobile-sized screen or in mobile mode, apply adaptive zoom
       if (viewMode === 'mobile' || screenWidth < 1024) {
-        // We use a constant scale factor to ensure perfect proportionality.
-        // 2.15 is the "perfect" zoom level. By keeping it constant, 
-        // the card will always occupy ~206% of the screen width on ANY device.
-        const idealScale = 2.15; 
+        // We target a specific visual width (820px) that represents the 
+        // "perfect fit" identified by the user on the Redmi Note 13.
+        // This ensures the card looks exactly the same size relative to the 
+        // user's eyes on any device.
+        const targetVisualWidth = 820; 
         
-        setBaseMobileScale(idealScale);
-        setScale(idealScale);
+        // Calculate the scale needed based on the actual screen width
+        const adaptiveScale = targetVisualWidth / screenWidth;
+        
+        // Cap the scale to sensible limits
+        const finalScale = Math.max(1.5, Math.min(4, adaptiveScale));
+        
+        setBaseMobileScale(finalScale);
+        setScale(finalScale);
         setPosition({ x: 0, y: 0 });
       } else {
         setScale(1);
@@ -499,7 +506,7 @@ export default function App() {
                   transition={{ type: 'spring', damping: 20, stiffness: 100 }}
                   className={`glass-card flex flex-col h-fit transition-all ${
                     viewMode === 'mobile' 
-                      ? 'p-5 w-[96vw] gap-4 shadow-2xl' 
+                      ? 'p-4 w-[92vw] max-w-[380px] gap-3 shadow-2xl' 
                       : 'p-6 min-w-70 gap-4'
                   }`}
                 >
