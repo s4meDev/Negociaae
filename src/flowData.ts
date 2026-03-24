@@ -362,7 +362,7 @@ export const FLOW_DATA: Record<string | number, FlowStep> = {
   },
   41: {
     cat: "IRREGULARIDADE",
-    q: "41. INCONFORMIDADES",
+    q: "41. INCONFORMIDADES NO PREENCHIMENTO DO TERMO",
     type: "multi",
     options: [
       { txt: "DOCUMENTO RASURADO" },
@@ -428,7 +428,7 @@ export const FLOW_DATA: Record<string | number, FlowStep> = {
   },
   48: {
     cat: "DESDOBROS",
-    q: "48. NECESSÁRIO RECOMPOSIÇÃO?",
+    q: "48. NECESSÁRIO RECOMPOSIÇÃO DE PAVIMENTO?",
     type: "single",
     options: [
       { txt: "SIM", next: 49 },
@@ -449,7 +449,7 @@ export const FLOW_DATA: Record<string | number, FlowStep> = {
   },
   50: {
     cat: "DESDOBROS",
-    q: "50. ALTERAÇÃO CADASTRAL?",
+    q: "50. EQUIPE ABRIU O DESDOBRO DE ALTERAÇÃO CADASTRAL?",
     type: "single",
     options: [
       { txt: "SIM", next: 51 },
@@ -467,13 +467,27 @@ export const FLOW_DATA: Record<string | number, FlowStep> = {
   },
   52: {
     cat: "ANÁLISE",
-    q: "52. INCONFORMIDADES",
+    q: "52. INCONFORMIDADES IDENTIFICADAS DURANTE A EXECUÇÃO",
     type: "multi",
     options: [
+      { txt: "CORTE COM MENOS DE 80CM NO RAMAL" },
       { txt: "ERRO NO PADRÃO DE FOTOS" },
-      { txt: "NÃO ESCAVOU" },
-      { txt: "NÃO FEZ TESTE DPD" },
-      { txt: "SERVIÇO ERRADO" }
+      { txt: "ERRO NO PARECER DO CAMPO" },
+      { txt: "ERRO DO SUPORTE INTERNO (BACKOFFICE)" },
+      { txt: "HD INSTALADO COM A NUMERAÇÃO DIFERENTE DO SISTEMA" },
+      { txt: "MOTIVO DE ENCERRAMENTO INDEVIDO" },
+      { txt: "NÃO ESCAVOU OU NÃO COMPROVOU ESCAVAÇÃO PADRÃO" },
+      { txt: "NÃO REALIZOU O TESTE DPD" },
+      { txt: "NÃO SOLICITOU SUPORTE INTERNO (BACKOFFICE)" },
+      { txt: "NÃO DESCEU O CORTE" },
+      { txt: "NÃO NOTIFICOU O CLIENTE" },
+      { txt: "NÃO SOLICITOU ALTERAÇÃO CADASTRAL" },
+      { txt: "NÃO PADRONIZOU" },
+      { txt: "NÃO DESMONTOU O HD" },
+      { txt: "NEGOCIOU E NÃO RELIGOU" },
+      { txt: "SERVIÇO EXECUTADO NO HD/MATRÍCULA ERRADO" },
+      { txt: "SEM ENTREGA DO COMUNICADO" },
+      { txt: "SEM EVIDÊNCIAS DE ÁGUA JORRANDO DURANTE O CORTE" }
     ],
     next: 53
   },
@@ -485,7 +499,7 @@ export const FLOW_DATA: Record<string | number, FlowStep> = {
   },
   54: {
     cat: "CONCLUSÃO",
-    q: "54. Na finalização do serviço o cliente está:",
+    q: "54. NA FINALIZAÇÃO DO SERVIÇO O CLIENTE ESTÁ:",
     type: "single",
     options: [
       { txt: "ATIVO", next: 55 },
