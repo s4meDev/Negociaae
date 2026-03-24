@@ -69,26 +69,15 @@ export default function App() {
     const updateMobileScale = () => {
       const screenWidth = window.innerWidth;
       
-      // If we are on a mobile-sized screen or in mobile mode, apply adaptive zoom
+      // If we are on a mobile-sized screen or in mobile mode, apply proportional zoom
       if (viewMode === 'mobile' || screenWidth < 1024) {
-        // This logic ensures the card has the same "visual size" on any screen.
-        // We target a specific pixel width for the card (e.g., 850px) which 
-        // represents the "perfect" zoom level identified by the user.
-        const targetVisualWidth = 850; 
-        const currentWidthAtScale1 = screenWidth * 0.96; // Card is 96vw
+        // We use a constant scale factor to ensure perfect proportionality.
+        // 2.15 is the "perfect" zoom level. By keeping it constant, 
+        // the card will always occupy ~206% of the screen width on ANY device.
+        const idealScale = 2.15; 
         
-        // Calculate the scale needed to reach that target width
-        let adaptiveScale = targetVisualWidth / currentWidthAtScale1;
-        
-        // If on a large screen (desktop preview), cap it to 1.0
-        if (screenWidth >= 1024) {
-          adaptiveScale = 1.0;
-        }
-        
-        const finalScale = Math.max(1.0, Math.min(5, adaptiveScale));
-        
-        setBaseMobileScale(finalScale);
-        setScale(finalScale);
+        setBaseMobileScale(idealScale);
+        setScale(idealScale);
         setPosition({ x: 0, y: 0 });
       } else {
         setScale(1);
@@ -510,7 +499,7 @@ export default function App() {
                   transition={{ type: 'spring', damping: 20, stiffness: 100 }}
                   className={`glass-card flex flex-col h-fit transition-all ${
                     viewMode === 'mobile' 
-                      ? 'p-4 w-[96vw] max-w-[420px] gap-3' 
+                      ? 'p-5 w-[96vw] gap-4 shadow-2xl' 
                       : 'p-6 min-w-70 gap-4'
                   }`}
                 >
