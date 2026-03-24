@@ -79,17 +79,19 @@ export default function App() {
         if (screenWidth >= 1024) {
           targetScale = 1.0;
         } else {
-          // Use the original formula that the user considered "perfect" on Redmi Note 13
-          // (screenWidth * 1.9) / 420
-          const originalScale = (screenWidth * 1.9) / 420;
+          // Use the original formula adjusted to 72.5% as requested by the user
+          // (screenWidth * 1.9) / 420 is the old "100%"
+          // We apply 0.725 to reach the "perfect" proportion shown in the reference image
+          const baseScale = (screenWidth * 1.9) / 420;
+          const adjustedScale = baseScale * 0.725;
           
           // Adjust for aspect ratio: 
           // If the device is wider/shorter than the Redmi (REF_RATIO = 0.45),
           // we scale down proportionally to maintain the same visual "fit" vertically.
           if (currentRatio > REF_RATIO) {
-            targetScale = originalScale * (REF_RATIO / currentRatio);
+            targetScale = adjustedScale * (REF_RATIO / currentRatio);
           } else {
-            targetScale = originalScale;
+            targetScale = adjustedScale;
           }
         }
         
