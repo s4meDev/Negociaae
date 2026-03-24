@@ -70,16 +70,16 @@ export default function App() {
       if (viewMode === 'mobile') {
         const screenWidth = window.innerWidth;
         
-        // Calibrated scale that matches the "perfect" look on Redmi Note 13
-        // This ensures the card maintains the exact same proportion relative to the screen on any device
-        const idealMobileScale = 1.85; 
+        // The "perfect" scale factor identified by the user for Redmi Note 13
+        // A scale of 2.15 makes the 96vw card exactly ~2.06x the viewport width
+        const idealMobileScale = 2.15; 
         
         let targetScale;
         if (screenWidth >= 1024) {
-          // On desktop preview, we use 1.0 (half of mobile zoom) as requested
+          // On desktop preview, we use 1.0 to avoid the "blown out" look
           targetScale = 1.0;
         } else if (screenWidth <= 480) {
-          // On all mobile devices, use the constant ideal scale to maintain proportion
+          // On all mobile devices, use the constant 2.15 scale to maintain the "perfect" proportion
           targetScale = idealMobileScale;
         } else {
           // Smooth transition for intermediate tablet sizes
