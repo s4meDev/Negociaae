@@ -31,6 +31,18 @@ interface ActiveStep {
   lastClickedContinue?: 'top' | 'bottom' | null;
 }
 
+// Reference device specifications (Xiaomi Redmi Note 13)
+// Physical: 162.24mm (H) x 75.55mm (W) x 7.97mm (T)
+const REFERENCE_DEVICE = {
+  width: 1080,
+  height: 2400,
+  inches: 6.67,
+  aspectRatio: 1080 / 2400,
+  // Approximate CSS pixels (assuming 3x device pixel ratio)
+  cssWidth: 360,
+  cssHeight: 800
+};
+
 export default function App() {
   const [activePath, setActivePath] = useState<ActiveStep[]>([
     { id: 10, selectedOptionIndices: [], buttonRefs: [] }
@@ -42,7 +54,8 @@ export default function App() {
   const [lines, setLines] = useState<{ d: string; id: string; x1: number; y1: number; x2: number; y2: number }[]>([]);
   const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('desktop');
   
-  const [baseMobileScale, setBaseMobileScale] = useState(2);
+  const [baseMobileScale, setBaseMobileScale] = useState(1);
+  const [deviceInfo, setDeviceInfo] = useState({ width: 0, height: 0, ratio: 0 });
   
   const viewportRef = useRef<HTMLDivElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
@@ -64,30 +77,51 @@ export default function App() {
     }
   }, [activePath.length, viewMode]);
 
-  // Adaptable mobile zoom calculation
+  // Adaptable mobile zoom calculation based on Redmi Note 13 proportions
   useEffect(() => {
     const updateMobileScale = () => {
+      const screenWidth = window.innerWidth;
+      const screenHeight = window.innerHeight;
+      const currentRatio = screenWidth / screenHeight;
+      
+      // Reference: Redmi Note 13 (approx CSS pixels)
+      // Width: ~392px, Height: ~850px, Diagonal: ~936px
+      const REF_WIDTH = 392;
+      const REF_HEIGHT = 850;
+      const REF_DIAGONAL = Math.sqrt(REF_WIDTH ** 2 + REF_HEIGHT ** 2);
+      
+      const currentDiagonal = Math.sqrt(screenWidth ** 2 + screenHeight ** 2);
+      
+      setDeviceInfo({ 
+        width: screenWidth, 
+        height: screenHeight, 
+        ratio: Number(currentRatio.toFixed(2)) 
+      });
+
       if (viewMode === 'mobile') {
-        const screenWidth = window.innerWidth;
-        const refCardWidth = 420;
-        
-        // If screen is large (desktop preview), we use 1.0 (half of previous ~2.0)
-        // If screen is small (mobile), we use the "zoom" factor relative to the card width
         let targetScale;
         if (screenWidth >= 1024) {
           targetScale = 1.0;
-        } else if (screenWidth <= 480) {
-          // On mobile, we want the card to be ~1.9x the screen width
-          targetScale = (screenWidth * 1.9) / refCardWidth;
         } else {
-          // Smooth transition between mobile zoom and desktop 1:1
-          const mobileTarget = (480 * 1.9) / refCardWidth; // ~2.17
-          const desktopTarget = 1.0;
-          const t = (screenWidth - 480) / (1024 - 480);
-          targetScale = mobileTarget + t * (desktopTarget - mobileTarget);
+          // Proportional scaling based on diagonal to respect "inches" and "resolution"
+          const diagonalFactor = currentDiagonal / REF_DIAGONAL;
+          
+          // The user said it's currently "perfect" on their Redmi.
+          // We'll use a base scale that worked well on the Redmi (~1.8)
+          // and adjust it by the diagonal factor.
+          const baseScaleOnRedmi = 1.8;
+          
+          targetScale = baseScaleOnRedmi * diagonalFactor;
+          
+          // Fine-tune: if the device is much wider than the Redmi (lower aspect ratio),
+          // we slightly reduce the scale to avoid excessive width.
+          const refRatio = REF_WIDTH / REF_HEIGHT; // ~0.46
+          if (currentRatio > refRatio + 0.1) {
+            targetScale *= (refRatio / currentRatio) * 1.1;
+          }
         }
         
-        const finalScale = Math.max(0.6, Math.min(4, targetScale));
+        const finalScale = Math.max(0.4, Math.min(4, targetScale));
         setBaseMobileScale(finalScale);
         setScale(finalScale);
         setPosition({ x: 0, y: 0 });
@@ -398,6 +432,12 @@ export default function App() {
         {/* Banner simplificado para mobile - opcional, mas vamos tentar manter o header limpo */}
         
         <div className="flex items-center gap-2 md:gap-4">
+          {/* Proportional Info (Debug/Feedback) */}
+          <div className="hidden xl:flex flex-col items-end text-[9px] text-slate-400 font-mono leading-tight border-r border-slate-200 pr-4 mr-2">
+            <span>REF: {REFERENCE_DEVICE.width}x{REFERENCE_DEVICE.height} ({REFERENCE_DEVICE.inches}")</span>
+            <span>CUR: {deviceInfo.width}x{deviceInfo.height} (Ratio: {deviceInfo.ratio})</span>
+          </div>
+
           {/* View Mode Toggle */}
           <div className="flex items-center bg-slate-100 rounded-lg p-1 md:p-1 border border-slate-200">
             <button 
