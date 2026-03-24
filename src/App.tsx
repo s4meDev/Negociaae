@@ -61,7 +61,7 @@ export default function App() {
   useEffect(() => {
     if (viewMode === 'mobile') {
       setPosition({ x: 0, y: 0 });
-      setScale(1); // We'll multiply this by 2 in the transform for mobile
+      setScale(2);
     } else {
       setPosition({ x: 50, y: 50 });
       setScale(1);
@@ -313,19 +313,19 @@ export default function App() {
 
   const reset = () => {
     setActivePath([{ id: 10, selectedOptionIndices: [], buttonRefs: [] }]);
-    setScale(1);
-    setPosition({ x: 50, y: 50 });
+    setScale(viewMode === 'mobile' ? 2 : 1);
+    setPosition(viewMode === 'mobile' ? { x: 0, y: 0 } : { x: 50, y: 50 });
   };
 
   return (
     <div className="flex flex-col h-[100dvh] w-screen bg-slate-50 font-sans select-none overflow-hidden">
       {/* Header */}
-      <header className="flex items-center justify-between px-5 md:px-8 py-4 md:py-3 bg-white border-b border-slate-200 z-50 shadow-sm relative min-h-20 md:min-h-16 flex-shrink-0">
-        <div className="flex items-center gap-3 md:gap-3">
+      <header className="flex items-center justify-between px-4 md:px-8 py-4 md:py-3 bg-white border-b border-slate-200 z-50 shadow-sm relative min-h-28 md:min-h-16 flex-shrink-0">
+        <div className="flex items-center gap-4 md:gap-3">
           <img 
             src="/ae-logo.jpeg" 
             alt="NEGOCIAAE Logo" 
-            className="w-10 h-10 md:w-10 md:h-10 rounded-lg md:rounded-xl object-cover shadow-sm"
+            className="w-12 h-12 md:w-10 md:h-10 rounded-lg md:rounded-xl object-cover shadow-sm"
             referrerPolicy="no-referrer"
           />
           <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-800">NEGOCIAAE</h1>
@@ -348,45 +348,45 @@ export default function App() {
           <div className="flex items-center bg-slate-100 rounded-lg p-1 md:p-1 border border-slate-200">
             <button 
               onClick={() => setViewMode('desktop')}
-              className={`p-1.5 md:p-1.5 rounded-md transition-all flex items-center gap-1.5 px-2 md:px-2 ${viewMode === 'desktop' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`p-2 md:p-1.5 rounded-md transition-all flex items-center gap-1.5 px-2 md:px-2 ${viewMode === 'desktop' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
               title="Versão Desktop"
             >
-              <Monitor size={18} className="md:w-4 md:h-4" />
-              <span className="text-[10px] md:text-[10px] font-bold uppercase hidden md:inline">Desktop</span>
+              <Monitor size={20} className="md:w-4 md:h-4" />
+              <span className="text-[12px] md:text-[10px] font-bold uppercase hidden md:inline">Desktop</span>
             </button>
             <button 
               onClick={() => setViewMode('mobile')}
-              className={`p-1.5 md:p-1.5 rounded-md transition-all flex items-center gap-1.5 px-2 md:px-2 ${viewMode === 'mobile' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`p-2 md:p-1.5 rounded-md transition-all flex items-center gap-1.5 px-2 md:px-2 ${viewMode === 'mobile' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
               title="Versão Mobile"
             >
-              <Smartphone size={18} className="md:w-4 md:h-4" />
-              <span className="text-[10px] md:text-[10px] font-bold uppercase hidden md:inline">Mobile</span>
+              <Smartphone size={20} className="md:w-4 md:h-4" />
+              <span className="text-[12px] md:text-[10px] font-bold uppercase hidden md:inline">Mobile</span>
             </button>
           </div>
 
           <div className="flex items-center bg-slate-100 rounded-lg p-1 md:p-1 border border-slate-200">
             <button 
               onClick={() => setScale((s: number) => Math.max(s - 0.1, 0.4))}
-              className="p-1.5 md:p-1.5 hover:bg-white rounded-md text-slate-600 transition-colors"
+              className="p-2 md:p-1.5 hover:bg-white rounded-md text-slate-600 transition-colors"
             >
-              {viewMode === 'mobile' ? <Minus size={20} /> : <ZoomOut size={18} />}
+              {viewMode === 'mobile' ? <Minus size={24} /> : <ZoomOut size={18} />}
             </button>
-            <span className="px-2 md:px-3 text-xs md:text-xs font-mono font-medium text-slate-500 min-w-10 md:min-w-15 text-center">
+            <span className="px-2 md:px-3 text-[14px] md:text-xs font-mono font-medium text-slate-500 min-w-12 md:min-w-15 text-center">
               {Math.round(scale * 100)}%
             </span>
             <button 
-              onClick={() => setScale((s: number) => Math.min(s + 0.1, 2))}
-              className="p-1.5 md:p-1.5 hover:bg-white rounded-md text-slate-600 transition-colors"
+              onClick={() => setScale((s: number) => Math.min(s + 0.1, 4))}
+              className="p-2 md:p-1.5 hover:bg-white rounded-md text-slate-600 transition-colors"
             >
-              {viewMode === 'mobile' ? <Plus size={20} /> : <ZoomIn size={18} />}
+              {viewMode === 'mobile' ? <Plus size={24} /> : <ZoomIn size={18} />}
             </button>
           </div>
           
           <button 
             onClick={reset}
-            className="flex items-center gap-2 px-4 md:px-4 py-2 md:py-2 bg-white border border-slate-200 rounded-lg text-slate-700 font-medium hover:bg-slate-50 transition-colors shadow-sm"
+            className="flex items-center gap-2 px-4 md:px-4 py-2.5 md:py-2 bg-white border border-slate-200 rounded-lg text-slate-700 font-medium hover:bg-slate-50 transition-colors shadow-sm"
           >
-            <RotateCcw size={20} className="md:w-4 md:h-4" />
+            <RotateCcw size={24} className="md:w-4 md:h-4" />
             {viewMode === 'mobile' ? null : <span className="hidden sm:inline">Reiniciar</span>}
           </button>
         </div>
@@ -417,7 +417,7 @@ export default function App() {
               : 'absolute top-0 left-0 flex-row gap-24 p-20 origin-top-left'
           }`}
           style={{ 
-            transform: viewMode === 'mobile' ? `scale(${scale * 2})` : `translate(${position.x}px, ${position.y}px) scale(${scale})`,
+            transform: viewMode === 'mobile' ? `scale(${scale})` : `translate(${position.x}px, ${position.y}px) scale(${scale})`,
             transition: isDragging ? 'none' : 'transform 0.1s ease-out'
           }}
         >
