@@ -42,7 +42,7 @@ export default function App() {
   const [lines, setLines] = useState<{ d: string; id: string; x1: number; y1: number; x2: number; y2: number }[]>([]);
   const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('desktop');
   
-  const [baseMobileScale, setBaseMobileScale] = useState(2);
+  const [baseMobileScale, setBaseMobileScale] = useState(3.5);
   
   const viewportRef = useRef<HTMLDivElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
@@ -67,27 +67,26 @@ export default function App() {
   // Adaptable mobile zoom calculation
   useEffect(() => {
     const updateMobileScale = () => {
-      if (viewMode === 'mobile') {
-        const screenWidth = window.innerWidth;
+      const screenWidth = window.innerWidth;
+      
+      // If we are on a mobile-sized screen or in mobile mode, apply adaptive zoom
+      if (viewMode === 'mobile' || screenWidth < 1024) {
+        // This logic ensures the card has the same "visual size" on any screen.
+        // We target a specific pixel width for the card (e.g., 850px) which 
+        // represents the "perfect" zoom level identified by the user.
+        const targetVisualWidth = 850; 
+        const currentWidthAtScale1 = screenWidth * 0.96; // Card is 96vw
         
-        // The "perfect" scale factor identified by the user for Redmi Note 13
-        // A scale of 2.8 makes the 96vw card exactly ~2.68x the viewport width
-        const idealMobileScale = 2.8; 
+        // Calculate the scale needed to reach that target width
+        let adaptiveScale = targetVisualWidth / currentWidthAtScale1;
         
-        let targetScale;
+        // If on a large screen (desktop preview), cap it to 1.0
         if (screenWidth >= 1024) {
-          // On desktop preview, we use 1.0 to avoid the "blown out" look
-          targetScale = 1.0;
-        } else if (screenWidth <= 480) {
-          // On all mobile devices, use the constant 2.8 scale to maintain the "perfect" proportion
-          targetScale = idealMobileScale;
-        } else {
-          // Smooth transition for intermediate tablet sizes
-          const t = (screenWidth - 480) / (1024 - 480);
-          targetScale = idealMobileScale + t * (1.0 - idealMobileScale);
+          adaptiveScale = 1.0;
         }
         
-        const finalScale = Math.max(0.5, Math.min(4, targetScale));
+        const finalScale = Math.max(1.0, Math.min(5, adaptiveScale));
+        
         setBaseMobileScale(finalScale);
         setScale(finalScale);
         setPosition({ x: 0, y: 0 });
