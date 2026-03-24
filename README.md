@@ -1,5 +1,5 @@
 # Negociaae
-Projeto Negociaae
+Projeto Negociaae Flow Engine
 # Interactive Flow Explorer
 
 Um explorador de fluxogramas interativo e moderno, construído com **React**, **Framer Motion** e **Tailwind CSS**. Este projeto permite navegar por etapas de um processo de forma visual e fluida.
@@ -21,7 +21,13 @@ Um explorador de fluxogramas interativo e moderno, construído com **React**, **
 - **Lucide React:** Conjunto de ícones consistentes e leves.
 - **Vite:** Ferramenta de build extremamente rápida.
 
-## Como Executar o Projeto
+## Como Executar o Projeto Online
+
+### Abra o Navegador e Acesse o Site
+
+O projeto estará disponível em `https://negociaae.vercel.app/`
+
+## Como Executar o Projeto Local
 
 Siga os passos abaixo para rodar o projeto localmente ou no GitHub Codespaces:
 
