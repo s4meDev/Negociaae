@@ -52,17 +52,37 @@ export default function App() {
   const svgRef = useRef<SVGSVGElement>(null);
   const lastTouchDistance = useRef<number | null>(null);
 
-  // Auto-scroll to new steps in mobile mode
+  // Auto-scroll to new steps
   useEffect(() => {
-    if (viewMode === 'mobile' && boardRef.current && activePath.length > 1) {
-      // Use a small timeout to allow the new step to be rendered
+    if (boardRef.current && activePath.length > 1) {
       const timer = setTimeout(() => {
         const steps = boardRef.current?.querySelectorAll('.glass-card');
         if (steps && steps.length > 0) {
-          const lastStep = steps[steps.length - 1];
-          lastStep.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+          const lastStep = steps[steps.length - 1] as HTMLElement;
+          
+          if (viewMode === 'mobile') {
+            lastStep.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+          } else {
+            // Desktop auto-pan: center the new step horizontally
+            const viewportWidth = viewportRef.current?.clientWidth || window.innerWidth;
+            const boardRect = boardRef.current!.getBoundingClientRect();
+            const stepRect = lastStep.getBoundingClientRect();
+            
+            // Calculate step position relative to board origin (unscaled)
+            const stepLeftInBoard = (stepRect.left - boardRect.left) / scale;
+            const stepWidth = stepRect.width / scale;
+            
+            // Calculate target X to center the step in the viewport
+            const targetX = (viewportWidth / 2) - (stepLeftInBoard * scale) - (stepWidth * scale / 2);
+            
+            // Only pan if the new step is not already well within view
+            const stepRightInViewport = stepRect.right;
+            if (stepRightInViewport > viewportWidth - 100) {
+              setPosition(prev => ({ ...prev, x: targetX }));
+            }
+          }
         }
-      }, 100);
+      }, 400);
       return () => clearTimeout(timer);
     }
   }, [activePath.length, viewMode]);
@@ -382,17 +402,17 @@ export default function App() {
   return (
     <div className="flex flex-col h-[100dvh] w-screen bg-slate-50 font-sans select-none overflow-hidden">
       {/* Header */}
-      <header className={`flex items-center justify-between px-4 md:px-8 bg-white border-b border-slate-200 z-50 shadow-sm relative flex-shrink-0 transition-all ${
-        viewMode === 'mobile' ? 'py-2 min-h-16' : 'py-4 md:py-3 min-h-28 md:min-h-16'
+      <header className={`flex items-center justify-between bg-white border-b border-slate-200 z-50 shadow-sm relative flex-shrink-0 transition-all ${
+        viewMode === 'mobile' ? 'py-2 px-2 min-h-14' : 'py-4 md:py-3 px-4 md:px-8 min-h-28 md:min-h-16'
       }`}>
-        <div className={`flex items-center gap-4 md:gap-3 transition-all ${viewMode === 'mobile' ? 'scale-90 origin-left' : ''}`}>
+        <div className={`flex items-center gap-2 md:gap-3 transition-all ${viewMode === 'mobile' ? 'scale-90 origin-left' : ''}`}>
           <img 
             src="/ae-logo.jpeg" 
             alt="NEGOCIAAE Logo" 
-            className="w-10 h-10 md:w-10 md:h-10 rounded-lg md:rounded-xl object-cover shadow-sm"
+            className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl object-cover shadow-sm"
             referrerPolicy="no-referrer"
           />
-          <h1 className="text-lg md:text-2xl font-bold tracking-tight text-slate-800">NEGOCIAAE</h1>
+          <h1 className="text-base md:text-2xl font-bold tracking-tight text-slate-800">NEGOCIAAE</h1>
         </div>
         
         {/* Banner centralizado - Visível se houver espaço suficiente */}
@@ -407,50 +427,50 @@ export default function App() {
         
         {/* Banner simplificado para mobile - opcional, mas vamos tentar manter o header limpo */}
         
-        <div className={`flex items-center gap-2 md:gap-4 transition-all ${viewMode === 'mobile' ? 'scale-90 origin-right' : ''}`}>
+        <div className={`flex items-center gap-1 md:gap-4 transition-all`}>
           {/* View Mode Toggle */}
-          <div className="flex items-center bg-slate-100 rounded-lg p-1 md:p-1 border border-slate-200">
+          <div className="flex items-center bg-slate-100 rounded-lg p-0.5 md:p-1 border border-slate-200">
             <button 
               onClick={() => setViewMode('desktop')}
-              className={`p-2 md:p-1.5 rounded-md transition-all flex items-center gap-1.5 px-2 md:px-2 ${viewMode === 'desktop' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`p-1 md:p-1.5 rounded-md transition-all flex items-center gap-1 px-1 md:px-2 ${viewMode === 'desktop' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
               title="Versão Desktop"
             >
-              <Monitor size={20} className="md:w-4 md:h-4" />
-              <span className="text-[12px] md:text-[10px] font-bold uppercase hidden md:inline">Desktop</span>
+              <Monitor size={16} className="md:w-4 md:h-4" />
+              <span className="text-[10px] font-bold uppercase hidden md:inline">Desktop</span>
             </button>
             <button 
               onClick={() => setViewMode('mobile')}
-              className={`p-2 md:p-1.5 rounded-md transition-all flex items-center gap-1.5 px-2 md:px-2 ${viewMode === 'mobile' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`p-1 md:p-1.5 rounded-md transition-all flex items-center gap-1 px-1 md:px-2 ${viewMode === 'mobile' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
               title="Versão Mobile"
             >
-              <Smartphone size={20} className="md:w-4 md:h-4" />
-              <span className="text-[12px] md:text-[10px] font-bold uppercase hidden md:inline">Mobile</span>
+              <Smartphone size={16} className="md:w-4 md:h-4" />
+              <span className="text-[10px] font-bold uppercase hidden md:inline">Mobile</span>
             </button>
           </div>
 
-          <div className="flex items-center bg-slate-100 rounded-lg p-1 md:p-1 border border-slate-200">
+          <div className="flex items-center bg-slate-100 rounded-lg p-0.5 md:p-1 border border-slate-200">
             <button 
               onClick={() => setScale((s: number) => Math.max(s - 0.1, 0.4))}
-              className="p-2 md:p-1.5 hover:bg-white rounded-md text-slate-600 transition-colors"
+              className="p-1 md:p-1.5 hover:bg-white rounded-md text-slate-600 transition-colors"
             >
-              {viewMode === 'mobile' ? <Minus size={24} /> : <ZoomOut size={18} />}
+              {viewMode === 'mobile' ? <Minus size={18} /> : <ZoomOut size={18} />}
             </button>
-            <span className="px-2 md:px-3 text-[14px] md:text-xs font-mono font-medium text-slate-500 min-w-12 md:min-w-15 text-center">
+            <span className="px-1 md:px-3 text-[10px] md:text-xs font-mono font-medium text-slate-500 min-w-8 md:min-w-15 text-center">
               {viewMode === 'mobile' ? Math.round((scale / baseMobileScale) * 100) : Math.round(scale * 100)}%
             </span>
             <button 
               onClick={() => setScale((s: number) => Math.min(s + 0.1, 8))}
-              className="p-2 md:p-1.5 hover:bg-white rounded-md text-slate-600 transition-colors"
+              className="p-1 md:p-1.5 hover:bg-white rounded-md text-slate-600 transition-colors"
             >
-              {viewMode === 'mobile' ? <Plus size={24} /> : <ZoomIn size={18} />}
+              {viewMode === 'mobile' ? <Plus size={18} /> : <ZoomIn size={18} />}
             </button>
           </div>
           
           <button 
             onClick={reset}
-            className="flex items-center gap-2 px-4 md:px-4 py-2.5 md:py-2 bg-white border border-slate-200 rounded-lg text-slate-700 font-medium hover:bg-slate-50 transition-colors shadow-sm"
+            className="flex items-center gap-1 px-2 md:px-4 py-1.5 md:py-2 bg-white border border-slate-200 rounded-lg text-slate-700 font-medium hover:bg-slate-50 transition-colors shadow-sm"
           >
-            <RotateCcw size={24} className="md:w-4 md:h-4" />
+            <RotateCcw size={18} className="md:w-4 md:h-4" />
             {viewMode === 'mobile' ? null : <span className="hidden sm:inline">Reiniciar</span>}
           </button>
         </div>
@@ -482,7 +502,7 @@ export default function App() {
           }`}
           style={{ 
             transform: viewMode === 'mobile' ? `scale(${scale})` : `translate(${position.x}px, ${position.y}px) scale(${scale})`,
-            transition: isDragging ? 'none' : 'transform 0.1s ease-out'
+            transition: isDragging ? 'none' : 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)'
           }}
         >
           {viewMode === 'mobile' && (
