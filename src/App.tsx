@@ -20,7 +20,8 @@ import {
   Monitor,
   Smartphone,
   Plus,
-  Minus
+  Minus,
+  Loader2
 } from 'lucide-react';
 import { FLOW_DATA } from './flowData';
 
@@ -46,6 +47,9 @@ export default function App() {
   const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('desktop');
   
   const [baseMobileScale, setBaseMobileScale] = useState(1);
+  const [pullDistance, setPullDistance] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const pullStartRef = useRef<number | null>(null);
   
   const viewportRef = useRef<HTMLDivElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
@@ -174,6 +178,9 @@ export default function App() {
   // Handle dragging (Touch)
   const handleTouchStart = (e: React.TouchEvent) => {
     if (viewMode === 'mobile') {
+      if (e.touches.length === 1 && viewportRef.current?.scrollTop === 0) {
+        pullStartRef.current = e.touches[0].clientY;
+      }
       if (e.touches.length === 2) {
         const distance = Math.hypot(
           e.touches[0].clientX - e.touches[1].clientX,
@@ -201,6 +208,14 @@ export default function App() {
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (viewMode === 'mobile') {
+      if (e.touches.length === 1 && pullStartRef.current !== null && !isRefreshing) {
+        const currentY = e.touches[0].clientY;
+        const diff = currentY - pullStartRef.current;
+        if (diff > 0) {
+          const distance = Math.min(diff * 0.4, 100);
+          setPullDistance(distance);
+        }
+      }
       if (e.touches.length === 2 && lastTouchDistance.current !== null) {
         const distance = Math.hypot(
           e.touches[0].clientX - e.touches[1].clientX,
@@ -230,6 +245,15 @@ export default function App() {
   };
 
   const handleTouchEnd = () => {
+    if (viewMode === 'mobile' && pullDistance > 60 && !isRefreshing) {
+      setIsRefreshing(true);
+      setTimeout(() => {
+        reset();
+        setIsRefreshing(false);
+      }, 1000);
+    }
+    setPullDistance(0);
+    pullStartRef.current = null;
     setIsDragging(false);
     lastTouchDistance.current = null;
   };
@@ -493,6 +517,35 @@ export default function App() {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
+        {/* Pull to Refresh Indicator */}
+        {viewMode === 'mobile' && (
+          <motion.div 
+            style={{ height: pullDistance }}
+            animate={{ height: pullDistance }}
+            transition={{ type: 'spring', damping: 20, stiffness: 200 }}
+            className="flex items-center justify-center overflow-hidden bg-slate-100/50 w-full sticky top-0 z-40"
+          >
+            <Loader2 
+              className={`text-blue-600 transition-all ${pullDistance > 60 ? 'animate-spin scale-110' : 'scale-90 opacity-50'}`} 
+              size={24} 
+            />
+          </motion.div>
+        )}
+
+        {/* Refreshing Overlay */}
+        {isRefreshing && (
+          <div className="absolute inset-0 z-[100] bg-white/60 backdrop-blur-sm flex items-center justify-center">
+            <motion.div 
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="flex flex-col items-center gap-3"
+            >
+              <Loader2 className="text-blue-600 animate-spin" size={40} />
+              <span className="text-slate-600 font-bold tracking-tight">RECARREGANDO...</span>
+            </motion.div>
+          </div>
+        )}
+
         <div 
           ref={boardRef}
           className={`flex ${
