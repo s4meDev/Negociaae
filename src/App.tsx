@@ -520,11 +520,11 @@ export default function App() {
         <div className={`flex items-center gap-2 md:gap-3 transition-all ${viewMode === 'mobile' ? 'scale-90 origin-left' : ''}`}>
           <img 
             src="/ae-logo.jpeg" 
-            alt="NEGOCIAAE Logo" 
+            alt="Negociaae Flow Logo" 
             className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl object-cover shadow-sm"
             referrerPolicy="no-referrer"
           />
-          <h1 className="text-base md:text-2xl font-bold tracking-tight text-slate-800">NEGOCIAAE</h1>
+          <h1 className="text-base md:text-2xl font-bold text-[#0054A6]">Negociaae Flow</h1>
         </div>
         
         {/* Banner centralizado removido conforme solicitado */}
@@ -965,7 +965,7 @@ export default function App() {
           </div>
         </div>
         <div>
-          © 2026 NEGOCIAAE FLOW ENGINE
+          © 2026 NEGOCIAAE FLOW
         </div>
       </footer>
     </div>
