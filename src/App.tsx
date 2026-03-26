@@ -59,7 +59,7 @@ export default function App() {
   // Auto-scroll to new steps
   useEffect(() => {
     if (boardRef.current && activePath.length > 1) {
-      const timer = setTimeout(() => {
+      const performScroll = () => {
         const steps = boardRef.current?.querySelectorAll('.glass-card');
         if (steps && steps.length > 0) {
           const lastStep = steps[steps.length - 1] as HTMLElement;
@@ -67,29 +67,34 @@ export default function App() {
           if (viewMode === 'mobile') {
             lastStep.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
           } else {
-            // Desktop auto-pan: center the new step horizontally
             const viewportWidth = viewportRef.current?.clientWidth || window.innerWidth;
-            const boardRect = boardRef.current!.getBoundingClientRect();
+            const boardWidth = boardRef.current!.scrollWidth * scale;
+            const stepLeftInBoard = lastStep.offsetLeft;
+            const stepWidth = lastStep.offsetWidth;
+            
+            // Calculate target X to center the step
+            let targetX = (viewportWidth / 2) - (stepLeftInBoard * scale) - (stepWidth * scale / 2);
+            
+            // Clamp targetX to valid range [viewportWidth - boardWidth, 0]
+            if (boardWidth > viewportWidth) {
+              targetX = Math.min(0, Math.max(targetX, viewportWidth - boardWidth));
+            } else {
+              targetX = (viewportWidth - boardWidth) / 2;
+            }
+            
             const stepRect = lastStep.getBoundingClientRect();
-            
-            // Calculate step position relative to board origin (unscaled)
-            const stepLeftInBoard = (stepRect.left - boardRect.left) / scale;
-            const stepWidth = stepRect.width / scale;
-            
-            // Calculate target X to center the step in the viewport
-            const targetX = (viewportWidth / 2) - (stepLeftInBoard * scale) - (stepWidth * scale / 2);
-            
-            // Only pan if the new step is not already well within view
-            const stepRightInViewport = stepRect.right;
-            if (stepRightInViewport > viewportWidth - 100) {
+            if (stepRect.right > viewportWidth - 100 || stepRect.left < 100) {
               setPosition(prev => ({ ...prev, x: targetX }));
             }
           }
         }
-      }, 400);
+      };
+
+      // Use a timer for both to ensure DOM is ready and animations are smooth
+      const timer = setTimeout(performScroll, 400);
       return () => clearTimeout(timer);
     }
-  }, [activePath.length, viewMode]);
+  }, [activePath.length, viewMode, scale]);
 
   // Adaptable mobile zoom calculation based on Redmi Note 13 proportions
   useEffect(() => {
@@ -124,7 +129,7 @@ export default function App() {
         setScale(finalScale);
         setPosition({ x: 0, y: 0 });
       } else {
-        setScale(1);
+        setScale(0.84);
         setPosition({ x: 50, y: 50 });
       }
     };
@@ -153,8 +158,8 @@ export default function App() {
   const handleWheel = (e: React.WheelEvent) => {
     if (viewMode === 'mobile') return; // Disable zoom via wheel in mobile scroll mode if preferred, or keep it
     e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.1 : 0.1;
-    setScale((prev: number) => Math.min(Math.max(prev + delta, 0.4), 8));
+    const delta = e.deltaY > 0 ? -0.05 : 0.05;
+    setScale((prev: number) => Math.min(Math.max(prev + delta, 0.6), 1.2));
   };
 
   // Handle dragging (Mouse)
@@ -167,10 +172,33 @@ export default function App() {
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (viewMode === 'mobile' || !isDragging) return;
-    setPosition({
-      x: e.clientX - dragStart.x,
-      y: e.clientY - dragStart.y
-    });
+    
+    let newX = e.clientX - dragStart.x;
+    let newY = scale > 1.05 ? e.clientY - dragStart.y : position.y;
+
+    // Apply constraints to keep content within viewport scope
+    if (boardRef.current && viewportRef.current) {
+      const boardWidth = boardRef.current.offsetWidth * scale;
+      const boardHeight = boardRef.current.offsetHeight * scale;
+      const viewportWidth = viewportRef.current.clientWidth;
+      const viewportHeight = viewportRef.current.clientHeight;
+
+      if (boardWidth > viewportWidth) {
+        newX = Math.min(0, Math.max(newX, viewportWidth - boardWidth));
+      } else {
+        newX = Math.max(0, Math.min(newX, viewportWidth - boardWidth));
+      }
+
+      if (scale > 1.05) {
+        if (boardHeight > viewportHeight) {
+          newY = Math.min(0, Math.max(newY, viewportHeight - boardHeight));
+        } else {
+          newY = Math.max(0, Math.min(newY, viewportHeight - boardHeight));
+        }
+      }
+    }
+
+    setPosition({ x: newX, y: newY });
   };
 
   const handleMouseUp = () => setIsDragging(false);
@@ -222,24 +250,46 @@ export default function App() {
           e.touches[0].clientY - e.touches[1].clientY
         );
         const delta = (distance - lastTouchDistance.current) * 0.005;
-        setScale((prev: number) => Math.min(Math.max(prev + delta, 0.4), 8));
+        setScale((prev: number) => Math.min(Math.max(prev + delta, 0.6), 1.2));
         lastTouchDistance.current = distance;
       }
       return;
     }
 
     if (e.touches.length === 1 && isDragging) {
-      setPosition({
-        x: e.touches[0].clientX - dragStart.x,
-        y: e.touches[0].clientY - dragStart.y
-      });
+      let newX = e.touches[0].clientX - dragStart.x;
+      let newY = scale > 1.05 ? e.touches[0].clientY - dragStart.y : position.y;
+
+      // Apply constraints
+      if (boardRef.current && viewportRef.current) {
+        const boardWidth = boardRef.current.offsetWidth * scale;
+        const boardHeight = boardRef.current.offsetHeight * scale;
+        const viewportWidth = viewportRef.current.clientWidth;
+        const viewportHeight = viewportRef.current.clientHeight;
+
+        if (boardWidth > viewportWidth) {
+          newX = Math.min(0, Math.max(newX, viewportWidth - boardWidth));
+        } else {
+          newX = Math.max(0, Math.min(newX, viewportWidth - boardWidth));
+        }
+
+        if (scale > 1.05) {
+          if (boardHeight > viewportHeight) {
+            newY = Math.min(0, Math.max(newY, viewportHeight - boardHeight));
+          } else {
+            newY = Math.max(0, Math.min(newY, viewportHeight - boardHeight));
+          }
+        }
+      }
+
+      setPosition({ x: newX, y: newY });
     } else if (e.touches.length === 2 && lastTouchDistance.current !== null) {
       const distance = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
         e.touches[0].clientY - e.touches[1].clientY
       );
       const delta = (distance - lastTouchDistance.current) * 0.005;
-      setScale((prev: number) => Math.min(Math.max(prev + delta, 0.4), 8));
+      setScale((prev: number) => Math.min(Math.max(prev + delta, 0.6), 1.2));
       lastTouchDistance.current = distance;
     }
   };
@@ -257,6 +307,42 @@ export default function App() {
     setIsDragging(false);
     lastTouchDistance.current = null;
   };
+
+  // Constrain position when scale or content changes
+  const applyConstraints = useCallback(() => {
+    if (viewMode === 'mobile' || !boardRef.current || !viewportRef.current) return;
+
+    const boardWidth = boardRef.current.scrollWidth * scale;
+    const boardHeight = boardRef.current.scrollHeight * scale;
+    const viewportWidth = viewportRef.current.clientWidth;
+    const viewportHeight = viewportRef.current.clientHeight;
+
+    setPosition(prev => {
+      let newX = prev.x;
+      let newY = prev.y;
+
+      if (boardWidth > viewportWidth) {
+        newX = Math.min(0, Math.max(newX, viewportWidth - boardWidth));
+      } else {
+        newX = (viewportWidth - boardWidth) / 2;
+      }
+
+      if (boardHeight > viewportHeight) {
+        newY = Math.min(0, Math.max(newY, viewportHeight - boardHeight));
+      } else {
+        newY = Math.max(0, Math.min(newY, viewportHeight - boardHeight));
+      }
+
+      if (Math.abs(newX - prev.x) > 0.1 || Math.abs(newY - prev.y) > 0.1) {
+        return { x: newX, y: newY };
+      }
+      return prev;
+    });
+  }, [scale, viewMode]);
+
+  useEffect(() => {
+    applyConstraints();
+  }, [scale, viewMode, applyConstraints]);
 
   // Calculate curved lines
   const updateLines = useCallback(() => {
@@ -342,6 +428,7 @@ export default function App() {
   useEffect(() => {
     const observer = new ResizeObserver(() => {
       updateLines();
+      applyConstraints();
     });
 
     if (boardRef.current) {
@@ -349,12 +436,13 @@ export default function App() {
     }
 
     updateLines();
+    applyConstraints();
     window.addEventListener('resize', updateLines);
     
     // Multiple checks to ensure layout is stable
-    const timer1 = setTimeout(updateLines, 50);
-    const timer2 = setTimeout(updateLines, 300);
-    const timer3 = setTimeout(updateLines, 600);
+    const timer1 = setTimeout(() => { updateLines(); applyConstraints(); }, 50);
+    const timer2 = setTimeout(() => { updateLines(); applyConstraints(); }, 300);
+    const timer3 = setTimeout(() => { updateLines(); applyConstraints(); }, 600);
 
     return () => {
       observer.disconnect();
@@ -363,7 +451,7 @@ export default function App() {
       clearTimeout(timer2);
       clearTimeout(timer3);
     };
-  }, [activePath, scale, updateLines]);
+  }, [activePath, scale, updateLines, applyConstraints]);
 
   // Handle option selection
   const handleSelect = (stepIdx: number, optionIdx: number, nextStepId?: string | number) => {
@@ -418,7 +506,7 @@ export default function App() {
       setScale(baseMobileScale);
       setPosition({ x: 0, y: 0 });
     } else {
-      setScale(1);
+      setScale(0.84);
       setPosition({ x: 50, y: 50 });
     }
   };
@@ -439,15 +527,7 @@ export default function App() {
           <h1 className="text-base md:text-2xl font-bold tracking-tight text-slate-800">NEGOCIAAE</h1>
         </div>
         
-        {/* Banner centralizado - Visível se houver espaço suficiente */}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden lg:block">
-          <img 
-            src="/ae-banner.png" 
-            alt="AE Banner" 
-            className="h-10 object-contain"
-            referrerPolicy="no-referrer"
-          />
-        </div>
+        {/* Banner centralizado removido conforme solicitado */}
         
         {/* Banner simplificado para mobile - opcional, mas vamos tentar manter o header limpo */}
         
@@ -474,16 +554,16 @@ export default function App() {
 
           <div className="flex items-center bg-slate-100 rounded-lg p-0.5 md:p-1 border border-slate-200">
             <button 
-              onClick={() => setScale((s: number) => Math.max(s - 0.1, 0.4))}
+              onClick={() => setScale((s: number) => Math.max(s - 0.05, 0.6))}
               className="p-1 md:p-1.5 hover:bg-white rounded-md text-slate-600 transition-colors"
             >
               {viewMode === 'mobile' ? <Minus size={18} /> : <ZoomOut size={18} />}
             </button>
             <span className="px-1 md:px-3 text-[10px] md:text-xs font-mono font-medium text-slate-500 min-w-8 md:min-w-15 text-center">
-              {viewMode === 'mobile' ? Math.round((scale / baseMobileScale) * 100) : Math.round(scale * 100)}%
+              {viewMode === 'mobile' ? Math.round((scale / baseMobileScale) * 100) : Math.round((scale / 0.84) * 100)}%
             </span>
             <button 
-              onClick={() => setScale((s: number) => Math.min(s + 0.1, 8))}
+              onClick={() => setScale((s: number) => Math.min(s + 0.05, 1.2))}
               className="p-1 md:p-1.5 hover:bg-white rounded-md text-slate-600 transition-colors"
             >
               {viewMode === 'mobile' ? <Plus size={18} /> : <ZoomIn size={18} />}
@@ -546,12 +626,24 @@ export default function App() {
           </div>
         )}
 
+        {/* Desktop Fixed Banner */}
+        {viewMode === 'desktop' && (
+          <div className="absolute top-6 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
+            <img 
+              src="/ae-banner.png" 
+              alt="AE Banner" 
+              className="w-[80vw] max-w-[300px] object-contain"
+              referrerPolicy="no-referrer"
+            />
+          </div>
+        )}
+
         <div 
           ref={boardRef}
           className={`flex ${
             viewMode === 'mobile' 
               ? 'relative flex-col gap-12 md:gap-32 px-2 py-6 md:p-8 items-center w-fit mx-auto origin-top' 
-              : 'absolute top-0 left-0 flex-row gap-24 p-20 origin-top-left'
+              : 'absolute top-0 left-0 flex-row gap-24 pt-60 px-20 pb-20 origin-top-left min-w-max'
           }`}
           style={{ 
             transform: viewMode === 'mobile' ? `scale(${scale})` : `translate(${position.x}px, ${position.y}px) scale(${scale})`,
@@ -590,10 +682,10 @@ export default function App() {
                     scale: 0.95 
                   }}
                   transition={{ type: 'spring', damping: 20, stiffness: 100 }}
-                  className={`glass-card flex flex-col h-fit transition-all ${
+                  className={`glass-card flex flex-col h-fit transition-all flex-shrink-0 ${
                     viewMode === 'mobile' 
                       ? 'p-4 w-[96vw] max-w-[420px] gap-3' 
-                      : 'p-6 min-w-70 gap-4'
+                      : 'p-6 w-fit min-w-[320px] gap-4'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -633,7 +725,7 @@ export default function App() {
                             <div 
                               key={optIdx}
                               className={`w-full bg-slate-50 text-slate-500 border border-slate-100 rounded-lg font-medium flex items-center ${
-                                viewMode === 'mobile' ? 'py-2 px-3 text-[10px]' : 'py-2.5 px-4 text-xs'
+                                viewMode === 'mobile' ? 'py-2 px-3 text-[10px]' : 'py-2.5 px-4 text-xs whitespace-nowrap'
                               }`}
                             >
                               {opt.txt}
@@ -700,9 +792,9 @@ export default function App() {
                         )}
 
                         <div className={`grid gap-2 ${
-                          viewMode === 'mobile' && step.options && step.options.length > 4
-                            ? 'grid-cols-2' 
-                            : 'grid-cols-1'
+                          viewMode === 'mobile' 
+                            ? (step.options && step.options.length > 4 ? 'grid-cols-2' : 'grid-cols-1')
+                            : (step.options && step.options.length > 8 ? 'grid-cols-2' : 'grid-cols-1')
                         }`}>
                           {step.options?.map((opt, optIdx) => {
                             const isSelected = activeStep.selectedOptionIndices.includes(optIdx);
@@ -729,7 +821,7 @@ export default function App() {
                                   {step.type === 'multi' ? (
                                     isSelected ? <CheckCircle2 size={viewMode === 'mobile' ? 14 : 18} /> : <Circle size={viewMode === 'mobile' ? 14 : 18} className="text-slate-300" />
                                   ) : null}
-                                  <span className="line-clamp-2">{opt.txt}</span>
+                                  <span className={viewMode === 'mobile' ? 'line-clamp-2' : 'whitespace-nowrap'}>{opt.txt}</span>
                                 </div>
                                 {viewMode !== 'mobile' && (
                                   <ChevronRight 
