@@ -1,40 +1,46 @@
-# Negociaae
-Projeto Negociaae Flow Engine
-# Interactive Flow Explorer
+# Negociaae Flow
 
-Um explorador de fluxogramas interativo e moderno, construído com **React**, **Framer Motion** e **Tailwind CSS**. Este projeto permite navegar por etapas de um processo de forma visual e fluida.
+**Negociaae Flow** é um explorador de fluxogramas interativo e moderno, projetado para proporcionar uma experiência visual fluida na navegação de processos complexos. Construído com as tecnologias mais recentes do ecossistema React, o projeto foca em performance, usabilidade e design responsivo.
 
-## Funcionalidades
+---
 
-- **Navegação Interativa:** Avance e retroceda entre as etapas do fluxo com animações suaves.
-- **Visualização de Conexões:** Linhas dinâmicas que conectam as etapas, proporcionando uma visão clara do progresso.
-- **Interface Responsiva:** Design adaptável para diferentes tamanhos de tela.
-- **Zoom e Pan:** Explore fluxos complexos com controles de zoom e movimentação da tela.
-- **Feedback Visual:** Ícones e cores que indicam o status de cada etapa (concluída, ativa ou pendente).
+## Funcionalidades Principais
+
+- **Navegação Inteligente:** Avance e retroceda entre as etapas do fluxo com transições suaves e intuitivas.
+- **Visualização Dinâmica de Conexões:** Linhas animadas que conectam as etapas, oferecendo uma visão clara do progresso e da hierarquia do processo.
+- **Interface Ultra-Responsiva:** Design adaptável que garante uma experiência consistente em desktops, tablets e dispositivos móveis.
+- **Controles de Exploração:** Suporte a Zoom e Pan para facilitar a visualização de fluxos extensos.
+- **Indicadores de Status:** Feedback visual imediato através de ícones e cores para etapas concluídas, ativas e pendentes.
 
 ## Tecnologias Utilizadas
 
-- **React 19:** Biblioteca principal para a interface.
-- **TypeScript:** Tipagem estática para maior segurança e produtividade.
-- **Tailwind CSS:** Estilização moderna e rápida com classes utilitárias.
-- **Framer Motion:** Animações poderosas e transições de layout.
-- **Lucide React:** Conjunto de ícones consistentes e leves.
-- **Vite:** Ferramenta de build extremamente rápida.
+O projeto utiliza um stack moderno focado em performance e produtividade:
 
-## Como Executar o Projeto Online
+- **React 19:** O estado da arte em bibliotecas de interface.
+- **TypeScript:** Segurança e escalabilidade com tipagem estática.
+- **Tailwind CSS:** Estilização baseada em utilitários para um design consistente.
+- **Framer Motion:** Animações de layout e transições de alta performance.
+- **Lucide React:** Biblioteca de ícones moderna e otimizada.
+- **Vite:** Ferramenta de build de próxima geração.
 
-### Abra o Navegador e Acesse o Site
+---
 
-O projeto estará disponível em `https://negociaae.vercel.app`
+## Acesso Online
 
-## Como Executar o Projeto Local
+O projeto está disponível para visualização em tempo real:
 
-Siga os passos abaixo para rodar o projeto localmente ou no GitHub Codespaces:
+[Acesse o Negociaae Flow Online](https://negociaae.vercel.app)
+
+---
+
+## Execução Local
+
+Siga os passos abaixo para rodar o projeto em seu ambiente de desenvolvimento:
 
 ### 1. Clonar o Repositório
 ```bash
-git clone https://github.com/SEU_USUARIO/SEU_REPOSITORIO.git
-cd SEU_REPOSITORIO
+git clone https://github.com/s4meDev/negociaae-flow.git
+cd negociaae-flow
 ```
 
 ### 2. Instalar Dependências
@@ -49,16 +55,24 @@ npm run dev
 
 O projeto estará disponível em `http://localhost:3000`.
 
+---
+
 ## Estrutura do Projeto
 
-- `src/App.tsx`: Componente principal com a lógica do fluxo e visualização.
-- `src/flowData.ts`: Definição dos dados e etapas do fluxograma.
-- `src/index.css`: Configurações globais de estilo e Tailwind.
-- `vite.config.ts`: Configuração do ambiente de build.
+- `src/App.tsx`: Core da aplicação, contendo a lógica de renderização e navegação.
+- `src/flowData.ts`: Centralização dos dados e definição das etapas do fluxo.
+- `src/index.css`: Configurações globais de estilo e temas Tailwind.
+- `vite.config.ts`: Configurações de otimização do ambiente de build.
+
+---
 
 ## Licença
 
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+Este projeto está sob a licença MIT. Sinta-se à vontade para utilizar e contribuir.
 
 ---
-Desenvolvido por Pedro Naus - https://github.com/s4meDev
+
+<p align="center">
+  Desenvolvido por <strong>Pedro Lucas Botelho Naus</strong><br>
+  <a href="https://github.com/s4meDev">GitHub</a> • <a href="https://www.linkedin.com/in/pedrolucasnaus/">LinkedIn</a>
+</p>
